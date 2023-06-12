@@ -8,7 +8,7 @@ namespace NexusMods.DataModel.Interprocess.Jobs;
 /// <summary>
 /// A job that shows progress of the game management tasks
 /// </summary>
-[JsonName(nameof(ManageGameJob))]
+[JsonTypeId<ManageGameJob>("A1474351-3EA9-4B86-A06E-EDC45354ECD7")]
 public record ManageGameJob : AJobEntity, ILoadoutJob
 {
     /// <inheritdoc />

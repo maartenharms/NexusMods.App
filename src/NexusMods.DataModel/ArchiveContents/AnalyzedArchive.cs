@@ -8,7 +8,7 @@ namespace NexusMods.DataModel.ArchiveContents;
 /// Represents an individual archive which has been scanned by an implementation
 /// of <see cref="IFileAnalyzer"/>.
 /// </summary>
-[JsonName("AnalyzedArchive")]
+[JsonTypeId<AnalyzedArchive>("1CE5659A-AAB2-4CC1-93F4-17706F833ED2")]
 public record AnalyzedArchive : AnalyzedFile
 {
     /// <summary>

@@ -16,7 +16,7 @@ namespace NexusMods.DataModel.Loadouts.Mods;
 ///
 ///    This will change some time in the future.
 /// </remarks>
-[JsonName("NexusMods.DataModel.Mod")]
+[JsonTypeId<Mod>("A646CBE9-5B26-4886-9A18-1CC3FF4E297F")]
 public record Mod : Entity, IHasEntityId<ModId>
 {
     /// <summary>

@@ -9,7 +9,7 @@ namespace NexusMods.DataModel.Loadouts.ModFiles;
 /// <summary>
 /// Cached metadata for a generated file.
 /// </summary>
-[JsonName("NexusMods.DataModel.Loadouts.ModFiles.CachedGeneratedFileData")]
+[JsonTypeId<CachedGeneratedFileData>("4C8D84E6-6476-45AB-8F13-0434A1CF7CCC")]
 public record CachedGeneratedFileData : Entity
 {
     /// <inheritdoc />

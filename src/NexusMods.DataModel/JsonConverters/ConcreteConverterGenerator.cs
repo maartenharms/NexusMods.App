@@ -101,7 +101,7 @@ public class ConcreteConverterGenerator<T> : AExpressionConverterGenerator<T>
 
     private WriteDelegate GenerateWriter()
     {
-        var nameAttr = GetNameAttr();
+        var nameAttr = GetTypeIdAttribute();
         var members = GetMembers();
 
         var writerParam = Expression.Parameter(typeof(Utf8JsonWriter), "writer");

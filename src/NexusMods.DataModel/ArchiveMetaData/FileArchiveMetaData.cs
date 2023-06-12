@@ -8,7 +8,7 @@ namespace NexusMods.DataModel.ArchiveMetaData;
 /// <summary>
 /// Archive Meta data for a file archive, where it cam
 /// </summary>
-[JsonName("NexusMods.DataMode.ArchiveMetaData")]
+[JsonTypeId<FileArchiveMetaData>("41D557A6-DA20-4D16-BFBF-9197E55919FB")]
 public record FileArchiveMetaData : AArchiveMetaData
 {
     /// <summary>

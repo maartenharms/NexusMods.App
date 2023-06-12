@@ -25,7 +25,7 @@ public class SerializerTests
 
         var json = JsonSerializer.Serialize(new BasicClass { SomeString = "One", SomeOtherString = "Two", BaseString = "Base" }, opts);
 
-        json.Should().Contain("\"$type\":\"BasicClass\"", "data is serialized with a type hint");
+        json.Should().Contain("\"$type\":\"a93d7f88-c4da-42af-8efe-eaf168e33ebf|BasicClass\"", "data is serialized with a type hint");
 
         var data = JsonSerializer.Deserialize<BasicClass>(json, opts)!;
 
@@ -50,8 +50,8 @@ public class SerializerTests
 
         var json = JsonSerializer.Serialize(originalData, opts);
 
-        json.Should().Contain("\"$type\":\"ClassWithInts\"", "data is serialized with a type hint");
-        json.Should().Contain("\"$type\":\"BasicClass\"", "sub data is serialized with a type hint");
+        json.Should().Contain("\"$type\":\"fefd32f4-d430-4cfc-9119-46662aa8036b|AdvancedClass\"", "data is serialized with a type hint");
+        json.Should().Contain("\"$type\":\"a93d7f88-c4da-42af-8efe-eaf168e33ebf|BasicClass\"", "sub data is serialized with a type hint");
 
         originalData.SubClass.SomeOtherString = null!;
         var data = JsonSerializer.Deserialize<AdvancedClass>(json, opts);
@@ -67,7 +67,7 @@ public class SerializerTests
 
         var json = JsonSerializer.Serialize<IInterface>(new BasicClass { SomeString = "One", SomeOtherString = "Two", BaseString = "Base" }, opts);
 
-        json.Should().Contain("\"$type\":\"BasicClass\"", "data is serialized with a type hint");
+        json.Should().Contain("\"$type\":\"a93d7f88-c4da-42af-8efe-eaf168e33ebf|BasicClass\"", "data is serialized with a type hint");
 
         var data = (BasicClass)JsonSerializer.Deserialize<IInterface>(json, opts)!;
 
@@ -200,7 +200,7 @@ public class SerializerTests
 
 
 
-    [JsonName("EnumClass")]
+    [JsonTypeId<EnumClass>("4E8E7E72-9515-412E-9435-8645F2AC0D6F")]
     public class EnumClass
     {
         public string SomeString { get; set; } = null!;
@@ -213,7 +213,7 @@ public class SerializerTests
         Three
     }
 
-    [JsonName("InjectableClass")]
+    [JsonTypeId<InjectableClass>("AFAE6CE2-C0B6-416F-82D0-FCAEBDAB09E5")]
     public class InjectableClass
     {
         public int SomeInt { get; set; }
@@ -232,7 +232,7 @@ public class SerializerTests
         public required string BaseString { get; init; } = "";
     }
 
-    [JsonName("BasicClass")]
+    [JsonTypeId<BasicClass>("A93D7F88-C4DA-42AF-8EFE-EAF168E33EBF")]
     public class BasicClass : ABase
     {
         public string SomeString { get; set; } = "";
@@ -241,7 +241,7 @@ public class SerializerTests
         public string? SomeOtherString { get; set; }
     }
 
-    [JsonName("ClassWithInts")]
+    [JsonTypeId<AdvancedClass>("FEFD32F4-D430-4CFC-9119-46662AA8036B")]
     public class AdvancedClass : ABase
     {
         public int SomeInt { get; set; }
@@ -250,7 +250,7 @@ public class SerializerTests
         public BasicClass SubClass { get; set; } = new() { BaseString = "" };
     }
 
-    [JsonName("NestedGeneric")]
+    [JsonTypeId<NestedGeneric>("A64AC1A5-271F-4E4D-B443-8D22572DA9D6")]
     public class NestedGeneric
     {
         public int SomeInt { get; set; }
@@ -265,14 +265,14 @@ public class SerializerTests
 
     }
 
-    [JsonName("Specific")]
+    [JsonTypeId("54825EDD-860A-4BF7-9281-9EC594726A78", "Specific")]
     public class Specific<T1, T2> : IGeneric<T1, T2>
     {
         public required T1 T1Val { get; init; }
         public required T2 T2Val { get; init; }
     }
 
-    [JsonName("Specific2")]
+    [JsonTypeId("35323E5E-3D46-43B1-AADF-D0D96BEBA404", "Specific2")]
     public class Specific2<T1, T2> : IGeneric<T1, T2>
     {
         public required T1 T1Val { get; init; }

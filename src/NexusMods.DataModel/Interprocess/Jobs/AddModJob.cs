@@ -7,7 +7,7 @@ namespace NexusMods.DataModel.Interprocess.Jobs;
 /// <summary>
 /// A job that adds a mod to a loadout
 /// </summary>
-[JsonName(nameof(AddModJob))]
+[JsonTypeId<AddModJob>("EC2DA75C-6D8E-47E7-B5A1-44769C93A5C4")]
 public record AddModJob : AJobEntity, IModJob
 {
     /// <inheritdoc />

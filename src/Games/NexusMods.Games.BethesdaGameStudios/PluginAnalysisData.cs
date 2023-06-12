@@ -4,7 +4,7 @@ using NexusMods.Paths;
 
 namespace NexusMods.Games.BethesdaGameStudios;
 
-[JsonName("BethesdaGameStudios.FileAnalysisData")]
+[JsonTypeId<PluginAnalysisData>("830565AC-E577-47A6-8762-A903A57004F9")]
 public class PluginAnalysisData : IFileAnalysisData
 {
     public required RelativePath[] Masters { get; init; }

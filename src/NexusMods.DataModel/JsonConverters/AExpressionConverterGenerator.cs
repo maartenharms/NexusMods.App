@@ -67,16 +67,16 @@ public abstract class AExpressionConverterGenerator<T> : JsonConverter<T>
         return members;
     }
 
-    protected string GetNameAttr()
+    protected string GetTypeIdAttribute()
     {
-        var nameAttr = Type.CustomAttributes.Where(t => t.AttributeType == typeof(JsonNameAttribute))
-            .Select(t => (string)t.ConstructorArguments.First().Value!)
+        var nameAttr = Attribute.GetCustomAttributes(Type)
+            .OfType<JsonTypeIdAttribute>()
             .FirstOrDefault();
-
+        
         if (nameAttr == default)
             throw new JsonException($"Type {Type} does not have a JsonNameAttribute");
 
-        return nameAttr;
+        return nameAttr.FullId;
     }
 
     protected class MemberRecord

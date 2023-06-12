@@ -49,19 +49,13 @@ public class AbstractClassConverterGenerator<T> : JsonConverter<T>
 
         foreach (var type in GetSubClasses())
         {
-            var nameAttr = type.CustomAttributes.Where(t => t.AttributeType == typeof(JsonNameAttribute))
-                .Select(t => (string)t.ConstructorArguments.First().Value!)
+            var nameAttr = Attribute.GetCustomAttributes(type)
+                .OfType<JsonTypeIdAttribute>()
                 .FirstOrDefault();
-
+            
             if (nameAttr == default)
-                throw new JsonException($"Type {type} of interface {_type} does not have a JsonNameAttribute");
-            _registry[nameAttr] = type;
-
-            var aliases = type.CustomAttributes.Where(t => t.AttributeType == typeof(JsonAliasAttribute))
-                .Select(t => t.ConstructorArguments.First());
-
-            foreach (var alias in aliases)
-                _registry[(string)alias.Value!] = type;
+                throw new JsonException($"Type {type} of interface {_type} does not have a JsonTypeIdAttribute");
+            _registry[nameAttr!.Prefix] = type;
         }
     }
 
@@ -82,12 +76,13 @@ public class AbstractClassConverterGenerator<T> : JsonConverter<T>
         if (readAhead.GetString() != "$type")
             throw new JsonException("Expected $type as first property on object");
         readAhead.Read();
-        var typeName = readAhead.GetString()!;
-        if (_registry.TryGetValue(typeName, out var type))
+        
+        var id = readAhead.GetString();
+        if (_registry.TryGetValue(id![..36], out var type))
         {
             return (T?)JsonSerializer.Deserialize(ref reader, type, options);
         }
-        throw new JsonException("Unknown type " + typeName);
+        throw new JsonException("Unknown type id: " + id);
     }
 
     public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)

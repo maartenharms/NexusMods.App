@@ -76,8 +76,8 @@ public class InterprocessTests : IDisposable
         lock (dest)
             dest.Should().BeEquivalentTo(src, opt => opt.WithStrictOrdering());
     }
-
-    [JsonName(nameof(TestEntity))]
+    
+    [JsonTypeId<TestEntity>("A6596D73-3D14-4BE7-A8EF-47FA3FA30FE4")]
     record TestEntity : Entity
     {
         

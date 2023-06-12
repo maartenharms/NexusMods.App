@@ -9,7 +9,7 @@ namespace NexusMods.DataModel.Loadouts.ModFiles;
 /// This record is used for denoting files which belong to the game itself,
 /// as opposed to one sourced from a game mod.
 /// </summary>
-[JsonName("NexusMods.DataModel.ModFiles.GameFile")]
+[JsonTypeId<GameFile>("BA237B38-73F9-4027-A545-026B66226FFD")]
 public record GameFile : AModFile, IToFile, IFromArchive
 {
     /// <summary>

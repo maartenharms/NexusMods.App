@@ -13,7 +13,7 @@ namespace NexusMods.DataModel.Loadouts;
 ///    We treat loadouts kind of like git branches, the document <a href="https://github.com/Nexus-Mods/NexusMods.App/blob/main/docs/ImmutableModlists.md">Immutable Mod Lists</a>
 ///    might provide you with some additional insight into the idea.
 /// </remarks>
-[JsonName("NexusMods.DataModel.Loadout")]
+[JsonTypeId<Loadout>("73FE269A-DEFD-4516-8FB3-209EF6A9F121")]
 public record Loadout : Entity, IEmptyWithDataStore<Loadout>
 {
     /// <summary>

@@ -39,7 +39,7 @@ public class SMAPIManifestAnalyzer : IFileAnalyzer
 /// https://github.com/Pathoschild/SMAPI/blob/9763bc7484e29cbc9e7f37c61121d794e6720e75/src/SMAPI.Toolkit/Serialization/Models/Manifest.cs#L11
 /// </summary>
 [PublicAPI]
-[JsonName("NexusMods.Games.StardewValley.SMAPIManifest")]
+[JsonTypeId<SMAPIManifest>("D5532DE8-B701-4195-8B86-1D7B18E3FE18")]
 public record SMAPIManifest : IFileAnalysisData
 {
     /// <summary>
@@ -73,7 +73,7 @@ public record SMAPIManifest : IFileAnalysisData
 /// https://github.com/Pathoschild/SMAPI/blob/9763bc7484e29cbc9e7f37c61121d794e6720e75/src/SMAPI.Toolkit/Serialization/Models/ManifestDependency.cs
 /// </summary>
 [PublicAPI]
-[JsonName("NexusMods.Games.StardewValley.SMAPIManifestDependency")]
+[JsonTypeId<SMAPIManifestDependency>("18ECFF29-FF9D-4848-A370-40B298B80DCC")]
 public record SMAPIManifestDependency
 {
     /// <summary>

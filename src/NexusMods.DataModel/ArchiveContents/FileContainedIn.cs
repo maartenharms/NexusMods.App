@@ -9,7 +9,7 @@ namespace NexusMods.DataModel.ArchiveContents;
 /// <summary>
 ///
 /// </summary>
-[JsonName("FileContainedIn")]
+[JsonTypeId<FileContainedIn>("36C0F44D-68A7-4041-9DC6-EA1C76DEFA48")]
 public record FileContainedIn : Entity
 {
     /// <summary>

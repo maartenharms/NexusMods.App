@@ -198,7 +198,7 @@ public class ALoadoutSynrchonizerTest<T> : ADataModelTest<T>
     }
 }
 
-[JsonName("TestGeneratedFile")]
+[JsonTypeId<TestGeneratedFile>("D872D6D4-0ACB-46F6-B624-1EDBFE91DF9E")]
 public record TestGeneratedFile : AModFile, IGeneratedFile, IToFile, ITriggerFilter<ModFilePair, Plan>
 {
     public ITriggerFilter<ModFilePair, Plan> TriggerFilter => this;
@@ -224,7 +224,7 @@ public record TestGeneratedFile : AModFile, IGeneratedFile, IToFile, ITriggerFil
 /// <summary>
 /// Example generated sort rule that sorts all mods alphabetically
 /// </summary>
-[JsonName("TestGeneratedSortRule")]
+[JsonTypeId<AlphabeticalSort>("07A15252-B701-4852-98A5-A1AF103E13F7")]
 public class AlphabeticalSort : IGeneratedSortRule, ISortRule<Mod, ModId>, ITriggerFilter<ModId, Loadout>
 {
     public ITriggerFilter<ModId, Loadout> TriggerFilter => this;

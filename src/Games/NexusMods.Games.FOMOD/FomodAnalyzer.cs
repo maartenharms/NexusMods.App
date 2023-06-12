@@ -102,7 +102,7 @@ public class FomodAnalyzer : IFileAnalyzer
     }
 }
 
-[JsonName("NexusMods.Games.FOMOD.FomodAnalyzerInfo")]
+[JsonTypeId<FomodAnalyzerInfo>("02D462F0-8BE2-4255-B788-8B19B987DDEF")]
 public record FomodAnalyzerInfo : IFileAnalysisData
 {
     public required string XmlScript { get; init; }

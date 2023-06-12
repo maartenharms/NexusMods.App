@@ -12,7 +12,7 @@ namespace NexusMods.Networking.NexusWebApi.NMA;
 ///   that information. If we wanted to save one request every six hours or if the lifetime of access tokens
 ///   changes, we might want to refresh tokens more proactively and then we'd need to save the expire time.
 /// </summary>
-[JsonName("JWTTokens")]
+[JsonTypeId<JWTTokenEntity>("FEA950EC-A02D-4A66-ACAF-30A61AD8EA1E")]
 // ReSharper disable once InconsistentNaming
 public record JWTTokenEntity : Entity
 {

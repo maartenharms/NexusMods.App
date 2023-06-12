@@ -7,7 +7,7 @@ namespace NexusMods.DataModel.Loadouts.Mods;
 /// <summary>
 /// Cached sort rules for a mod. 
 /// </summary>
-[JsonName("NexusMods.DataModel.Loadouts.ModFiles.CachedModSortRules")]
+[JsonTypeId<CachedModSortRules>("7E3C43AD-BF4F-429C-8613-74BD53F24869")]
 public record CachedModSortRules : Entity
 {
     /// <summary>

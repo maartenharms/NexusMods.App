@@ -37,7 +37,7 @@ internal class InfoJson
     public string Name { get; set; } = string.Empty;
 }
 
-[JsonName("NexusMods.Games.RedEngine.FileAnalyzers.RedModInfo")]
+[JsonTypeId<RedModInfo>("8E3B483D-D91C-4F68-A6D8-1AF95273DC00")]
 public record RedModInfo : IFileAnalysisData
 {
     // ReSharper disable once UnusedAutoPropertyAccessor.Global

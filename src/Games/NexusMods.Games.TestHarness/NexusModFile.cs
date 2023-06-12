@@ -7,7 +7,7 @@ using NexusMods.Networking.NexusWebApi.Types;
 
 namespace NexusMods.Games.TestHarness;
 
-[JsonName("NexusMods.Games.TestHarness.NexusModFile")]
+[JsonTypeId<NexusModFile>("4623A2BD-CFA4-4560-994B-EC2577CBAAD9")]
 public record NexusModFile : Entity
 {
     public required GameDomain Domain { get; init; }

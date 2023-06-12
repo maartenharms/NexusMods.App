@@ -7,7 +7,7 @@ namespace NexusMods.Games.DarkestDungeon.Models;
 /// <summary>
 /// Represents the data structure of a <c>project.xml</c> file.
 /// </summary>
-[JsonName("NexusMods.Games.DarkestDungeon.ModProject")]
+[JsonTypeId<ModProject>("CEB40B6C-F891-42EA-A0BA-194AEFC3AF46")]
 [XmlRoot(ElementName = "project")]
 public record ModProject : IFileAnalysisData
 {

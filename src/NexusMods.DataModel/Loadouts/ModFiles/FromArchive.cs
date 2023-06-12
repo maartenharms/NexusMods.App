@@ -7,7 +7,7 @@ namespace NexusMods.DataModel.Loadouts.ModFiles;
 /// <summary>
 /// Denotes any file which is originally sourced from an archive for installation.
 /// </summary>
-[JsonName("NexusMods.DataModel.GameFiles.FromArchive")]
+[JsonTypeId<FromArchive>("22C0313F-D0B8-4BE7-8DF1-45809F7483D8")]
 public record FromArchive : AModFile, IFromArchive, IToFile
 {
     /// <inheritdoc />

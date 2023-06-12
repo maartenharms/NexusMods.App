@@ -15,7 +15,7 @@ namespace NexusMods.DataModel.ArchiveContents;
 /// This file doesn't have to represent a file on disk, it can also represent
 /// a file stored inside an archive.
 /// </summary>
-[JsonName("AnalyzedFile")]
+[JsonTypeId<AnalyzedFile>("2735DCCF-D9F5-49E3-9B70-A0B8CC4EED59")]
 public record AnalyzedFile : Entity
 {
     /// <summary>

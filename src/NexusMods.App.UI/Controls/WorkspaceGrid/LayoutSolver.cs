@@ -44,7 +44,7 @@ public class LayoutSolver
             .ThenBy(x => x.Left)
             .First();
         
-        Split(pane.Width > pane.Height ? Direction.Horizontal : Direction.Vertical, pane);
+        Split(pane.Width >= pane.Height ? Direction.Horizontal : Direction.Vertical, pane);
     }
 
     /// <summary>

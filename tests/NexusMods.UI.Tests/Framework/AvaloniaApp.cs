@@ -97,7 +97,6 @@ public class AvaloniaApp : IDisposable
 
             var control = new TView();
             var context = new TVm();
-            control.DataContext = context;
             window.Content = control;
             window.Width = 1280;
             window.Height = 720;
@@ -114,6 +113,35 @@ public class AvaloniaApp : IDisposable
 
         await tcs.Task;
         waitHandle.Dispose();
+
+        return host;
+    }
+    
+    /// <summary>
+    /// Returns a control host that can be used to interact with the control. No VM is created
+    /// </summary>
+    /// <typeparam name="TView">The view to construct</typeparam>
+    /// <returns></returns>
+    public async Task<ControlHost<TView>> GetControl<TView>()
+        where TView : Control, new()
+    {
+        var host = await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+
+            var window = new Window();
+
+            var control = new TView();
+            window.Content = control;
+            window.Width = 1280;
+            window.Height = 720;
+            window.Show();
+            return new ControlHost<TView>
+            {
+                Window = window,
+                View = control,
+                App = this
+            };
+        });
 
         return host;
     }

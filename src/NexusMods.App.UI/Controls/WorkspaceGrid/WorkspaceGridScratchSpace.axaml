@@ -7,11 +7,10 @@
              x:Class="NexusMods.App.UI.Controls.WorkspaceGrid.WorkspaceGridScratchSpace">
     <Grid RowDefinitions="Auto, *">
         <StackPanel Orientation="Horizontal">
-            <Button><TextBlock>Add Panel</TextBlock></Button>
+            <Button Click="AddPanel"><TextBlock>Add Panel</TextBlock></Button>
+            <CheckBox Foreground="White"><TextBlock>Edit Mode</TextBlock></CheckBox>
         </StackPanel>
-        <workspaceGrid:WorkspaceGrid Grid.Row="1">
-        
-        </workspaceGrid:WorkspaceGrid>
+        <workspaceGrid:WorkspaceGrid x:Name="WorkspaceControl" Grid.Row="1" />
     </Grid>
 </UserControl>
 

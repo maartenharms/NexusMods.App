@@ -11,6 +11,11 @@ public class PaneDefinition
     public double ActualTop { get; set; }
     public double ActualWidth { get; set; }
     public double ActualHeight { get; set; }
+    
+    /// <summary>
+    /// Unique identifier for this pane
+    /// </summary>
+    public required Guid Id { get; init; }
 
     /// <summary>
     /// Makes a copy of this pane
@@ -20,6 +25,7 @@ public class PaneDefinition
     {
         return new PaneDefinition()
         {
+            Id = Guid.NewGuid(),
             Left = Left,
             Top = Top,
             Width = Width,

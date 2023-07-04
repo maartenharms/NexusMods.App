@@ -108,3 +108,60 @@ public class AViewTest<TView, TViewModel, TViewModelInterface> : AUiTest, IAsync
         (await src.Task.WaitAsync(TimeSpan.FromSeconds(10))).Should().BeTrue();
     }
 }
+
+public class AViewTest<TView> : AUiTest, IAsyncLifetime
+    where TView : Control, new()
+{
+    private readonly AvaloniaApp _app;
+    private ControlHost<TView>? _host;
+
+
+    protected ControlHost<TView> Host => _host!;
+    protected TView View => _host!.View;
+
+    protected AViewTest(IServiceProvider provider) : base(provider)
+    {
+        _app = provider.GetRequiredService<AvaloniaApp>();
+    }
+
+    protected async Task<T> GetControl<T>(string name) where T : Control
+    {
+        return await _host!.GetViewControl<T>(name);
+    }
+
+    protected async Task<T[]> GetVisualDescendants<T>(Control parent) where T : Control
+    {
+        return await OnUi(() =>
+        {
+            Control[] GetChildren(Control control, bool topLevel)
+            {
+                var children = control.GetVisualChildren()
+                    .SelectMany(c => GetChildren((Control)c, false));
+                if (!topLevel)
+                    return children.StartWith(control).ToArray();
+                return children.ToArray();
+            }
+
+            var res = GetChildren(parent, true).OfType<T>().ToArray();
+            return Task.FromResult(res);
+        });
+    }
+
+
+    public virtual async Task InitializeAsync()
+    {
+        _host = await _app.GetControl<TView>();
+        await PostInitializeSetup();
+    }
+
+    protected virtual Task PostInitializeSetup()
+    {
+        return Task.CompletedTask;
+    }
+
+    public virtual async Task DisposeAsync()
+    {
+        if (_host != null)
+            await _host.DisposeAsync();
+    }
+}

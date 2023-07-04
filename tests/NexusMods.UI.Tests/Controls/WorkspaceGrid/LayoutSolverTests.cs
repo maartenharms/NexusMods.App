@@ -16,10 +16,11 @@ public class LayoutSolverTests
         var solver = new LayoutSolver();
         solver.AddPane(new PaneDefinition()
         {
+            Id = Guid.NewGuid(),
             Width = 0.75,
             Height = 1.0
         });
-        
+
         solver.Split();
         
         solver.PaneDefinitions.Count().Should().Be(2);
@@ -39,12 +40,14 @@ public class LayoutSolverTests
         var solver = new LayoutSolver();
         solver.AddPane(new PaneDefinition()
         {
+            Id = Guid.NewGuid(),
             Width = 0.75,
             Height = 1.0
         });
         
         solver.AddPane(new PaneDefinition()
         {
+            Id = Guid.NewGuid(),
             Width = 0.25,
             Height = 1.0,
             Left = 0.75
@@ -63,6 +66,7 @@ public class LayoutSolverTests
         var solver = new LayoutSolver();
         solver.AddPane(new PaneDefinition
         {
+            Id = Guid.NewGuid(),
             Width = 1.0,
             Height = 1.0
         });
@@ -83,6 +87,7 @@ public class LayoutSolverTests
         var solver = new LayoutSolver();
         solver.AddPane(new PaneDefinition
         {
+            Id = Guid.NewGuid(),
             Width = 1.0,
             Height = 1.0
         });

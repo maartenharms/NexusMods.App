@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 
 namespace NexusMods.App.UI.Controls.WorkspaceGrid;
@@ -11,9 +12,9 @@ public partial class WorkspaceGridScratchSpace : UserControl
         InitializeComponent();
     }
 
-    private void InitializeComponent()
+    private void AddPanel(object? sender, RoutedEventArgs e)
     {
-        AvaloniaXamlLoader.Load(this);
+        WorkspaceControl.AddPane();
     }
 }
 

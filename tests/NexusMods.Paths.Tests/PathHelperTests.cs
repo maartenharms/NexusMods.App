@@ -37,6 +37,7 @@ public class PathHelperTests
     [InlineData(false, "C:\\", false)]
     [InlineData(false, "C:\\foo", false)]
     [InlineData(false, "C:\\foo\\", false)]
+    [InlineData(false, "C:\\\\foo", false)]
     [InlineData(false, "foo\\bar", false)]
     public void Test_IsSanitized(bool isUnix, string path, bool expected)
     {
@@ -66,6 +67,8 @@ public class PathHelperTests
     [InlineData(false, "C:\\", "C:/")]
     [InlineData(false, "C:\\foo", "C:/foo")]
     [InlineData(false, "C:\\foo\\", "C:/foo")]
+    [InlineData(false, "C:\\\\foo", "C:/foo")]
+    [InlineData(false, "C:\\\\\\\\\\foo\\\\\\bar\\\\\\baz\\\\\\\\", "C:/foo/bar/baz")]
     public void Test_Sanitize(bool isUnix, string input, string expectedOutput)
     {
         var actualOutput = PathHelpers.Sanitize(input, CreateOSInformation(isUnix));
@@ -337,8 +340,8 @@ public class PathHelperTests
     }
 
     [Theory]
-    [InlineData(true, "", "", false)]
-    [InlineData(true, "foo", "", false)]
+    [InlineData(true, "", "", true)]
+    [InlineData(true, "foo", "", true)]
     [InlineData(true, "", "foo", false)]
     [InlineData(true, "foo/bar", "foo", true)]
     [InlineData(true, "foo", "bar", false)]

@@ -8,7 +8,7 @@
     <Grid RowDefinitions="Auto, *">
         <StackPanel Orientation="Horizontal">
             <Button Click="AddPanel"><TextBlock>Add Panel</TextBlock></Button>
-            <CheckBox Foreground="White"><TextBlock>Edit Mode</TextBlock></CheckBox>
+            <CheckBox Foreground="White" x:Name="EditMode" IsCheckedChanged="ChangeEditMode"><TextBlock>Edit Mode</TextBlock></CheckBox>
         </StackPanel>
         <workspaceGrid:WorkspaceGrid x:Name="WorkspaceControl" Grid.Row="1" />
     </Grid>

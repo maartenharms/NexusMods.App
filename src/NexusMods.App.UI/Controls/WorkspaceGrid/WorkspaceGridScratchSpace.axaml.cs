@@ -16,5 +16,10 @@ public partial class WorkspaceGridScratchSpace : UserControl
     {
         WorkspaceControl.AddPane();
     }
+
+    private void ChangeEditMode(object? sender, RoutedEventArgs e)
+    {
+        WorkspaceControl.EditMode = EditMode.IsChecked ?? false;
+    }
 }
 

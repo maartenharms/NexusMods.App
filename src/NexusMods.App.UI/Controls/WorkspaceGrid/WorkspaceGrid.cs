@@ -31,6 +31,21 @@ public class WorkspaceGrid : Panel
     
     public IEnumerable<SeparatorHandle> Handles => _handles.Keys;
 
+    private bool _editMode = false;
+
+    public bool EditMode
+    {
+        get => _editMode;
+        set
+        {
+            _editMode = value;
+            SyncHandles();
+            InvalidateVisual();
+            InvalidateArrange();
+        }
+    }
+    
+    
     public void AddPane()
     {
         Solver.Split();
@@ -59,6 +74,7 @@ public class WorkspaceGrid : Panel
         
         foreach (var (key, visual) in _handles)
         {
+            visual.IsVisible = _editMode;
             if (seen.Contains(key))
                 continue;
 
@@ -80,8 +96,9 @@ public class WorkspaceGrid : Panel
             Child = contents,
             Width = contents.Width,
             Height = contents.Height,
-            ZIndex = 1,
+            //ZIndex = 1,
         };
+        contents.ContextFlyout = handle.ContextFlyout;
         return handle;
     }
 
@@ -169,7 +186,6 @@ public class WorkspaceGrid : Panel
             var difference = delta.X;
             
             var relativeMovement = difference / _size.Width;
-            Console.WriteLine("Moving handle {0} by {1} difference {2}", handle, relativeMovement, difference);
             Solver.MoveSeparator(handle, relativeMovement);
             
             SyncChildren();
@@ -181,7 +197,6 @@ public class WorkspaceGrid : Panel
             var difference = delta.Y;
             
             var relativeMovement = difference / _size.Height;
-            Console.WriteLine("Moving handle {0} by {1} difference {2}", handle, relativeMovement, difference);
             Solver.MoveSeparator(handle, relativeMovement);
             
             SyncChildren();

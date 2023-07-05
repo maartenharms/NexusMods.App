@@ -1,7 +1,9 @@
 ﻿using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
+using Avalonia.Layout;
 using Avalonia.Logging;
 
 namespace NexusMods.App.UI.Controls.WorkspaceGrid;
@@ -19,17 +21,46 @@ public class Handle : Border
         _parent = parent;
         _separatorHandle = separatorHandle;
         Console.WriteLine("bleh");
-   
+        ContextFlyout = CreateRightClickMenu();
     }
-    
-    public Direction Direction { get; init; }
 
+    private Flyout CreateRightClickMenu()
+    {
+        var menu = new Flyout();
+        var panel = new StackPanel();
+        panel.Orientation = Orientation.Vertical;
+        menu.Content = panel;
+
+        foreach (var item in GenerateMenuItems())
+        {
+            panel.Children.Add(item);
+        }
+        return menu;
+    }
+
+    private IEnumerable<Control> GenerateMenuItems()
+    {
+        yield return new TextBlock()
+        {
+            Text = "Split",
+        };
+        yield return new TextBlock()
+        {
+            Text = "Remove",
+        };
+    }
+
+    public Direction Direction { get; init; }
+    
+    
+    
+    
     protected override void OnPointerPressed(PointerPressedEventArgs e)
     {
         _isPressed = true;
+        //FlyoutBase.ShowAttachedFlyout(this);
         _originalPosition = e.GetPosition(_parent);
         
-        Console.WriteLine($"Pressed {_originalPosition}");
         base.OnPointerPressed(e);
     }
     

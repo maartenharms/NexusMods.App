@@ -23,7 +23,7 @@ public class WorkspaceGridTests : AViewTest<App.UI.Controls.WorkspaceGrid.Worksp
         {
             View.AddPane();
             View.Solver.PaneDefinitions.Should().HaveCount(2);
-            View.GetVisualDescendants().Should().HaveCount(2);
+            View.GetVisualDescendants().Should().HaveCount(4);
         });
     }
 
@@ -34,15 +34,15 @@ public class WorkspaceGridTests : AViewTest<App.UI.Controls.WorkspaceGrid.Worksp
         {
             View.AddPane();
             View.Solver.PaneDefinitions.Should().HaveCount(2);
-            View.GetVisualDescendants().Should().HaveCount(2);
+            View.GetVisualDescendants().Should().HaveCount(4);
             View.Handles.Should().HaveCount(1);
-            View.Handles.First().Direction.Should().Be(Direction.Vertical);
+            View.Handles.First().Direction.Should().Be(Direction.Horizontal);
             
             View.AddPane();
             View.Solver.PaneDefinitions.Should().HaveCount(3);
-            View.GetVisualDescendants().Should().HaveCount(4);
-            View.Handles.Should().HaveCount(2);
-            View.Handles.Skip(1).First().Direction.Should().Be(Direction.Vertical);
+            View.GetVisualDescendants().Should().HaveCount(9);
+            View.Handles.Should().HaveCount(3);
+            View.Handles.Skip(1).First().Direction.Should().Be(Direction.Horizontal);
         });
         
     }

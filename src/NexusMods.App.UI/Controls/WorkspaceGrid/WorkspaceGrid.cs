@@ -10,6 +10,7 @@ public class WorkspaceGrid : Panel
 {
     private readonly Dictionary<Guid,Control> _children;
     private readonly Dictionary<SeparatorHandle, Control> _handles;
+    private Size _size;
 
     public WorkspaceGrid()
     {
@@ -50,7 +51,7 @@ public class WorkspaceGrid : Panel
             else
             {
                 seen.Add(handle);
-                var visual = MakeHandle(handle.Direction);
+                var visual = MakeHandle(handle);
                 VisualChildren.Add(visual);
                 _handles.Add(handle, visual);
             }
@@ -66,14 +67,22 @@ public class WorkspaceGrid : Panel
         }
     }
 
-    private Control MakeHandle(Direction direction)
+    private Control MakeHandle(SeparatorHandle separatorHandle)
     {
-        return direction switch
+        var contents = separatorHandle.Direction switch
         {
-            Direction.Horizontal => new Rectangle { Fill = Brushes.DarkGray, Width = 8, Height = 32, ZIndex = 1 },
-            Direction.Vertical => new Rectangle { Fill = Brushes.LightGray, Width = 32, Height = 8, ZIndex = 1 },
-            _ => throw new ArgumentOutOfRangeException(nameof(direction), direction, null)
+            Direction.Horizontal => new Rectangle { Fill = Brushes.DarkGray, Width = 8, Height = 32},
+            Direction.Vertical => new Rectangle { Fill = Brushes.LightGray, Width = 32, Height = 8},
+            _ => throw new ArgumentOutOfRangeException(nameof(separatorHandle), separatorHandle.Direction, null)
         };
+        var handle = new Handle(this, separatorHandle)
+        {
+            Child = contents,
+            Width = contents.Width,
+            Height = contents.Height,
+            ZIndex = 1,
+        };
+        return handle;
     }
 
     protected override Size MeasureOverride(Size availableSize)
@@ -83,6 +92,7 @@ public class WorkspaceGrid : Panel
 
     protected override Size ArrangeOverride(Size finalSize)
     {
+        _size = finalSize;
         SyncChildren();
         SyncHandles();
         Solver.Solve(finalSize);
@@ -149,6 +159,34 @@ public class WorkspaceGrid : Panel
             };
             _children.Add(pane.Id, newVisual);
             VisualChildren.Add(newVisual);
+        }
+    }
+
+    public void MoveHandle(SeparatorHandle handle, Point delta)
+    {
+        if (handle.Direction == Direction.Horizontal)
+        {
+            var difference = delta.X;
+            
+            var relativeMovement = difference / _size.Width;
+            Console.WriteLine("Moving handle {0} by {1} difference {2}", handle, relativeMovement, difference);
+            Solver.MoveSeparator(handle, relativeMovement);
+            
+            SyncChildren();
+            SyncHandles();
+            InvalidateArrange();
+        }
+        else if (handle.Direction == Direction.Vertical)
+        {
+            var difference = delta.Y;
+            
+            var relativeMovement = difference / _size.Height;
+            Console.WriteLine("Moving handle {0} by {1} difference {2}", handle, relativeMovement, difference);
+            Solver.MoveSeparator(handle, relativeMovement);
+            
+            SyncChildren();
+            SyncHandles();
+            InvalidateArrange();
         }
     }
 }

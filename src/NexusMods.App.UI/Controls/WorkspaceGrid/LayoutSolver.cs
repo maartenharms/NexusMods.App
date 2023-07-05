@@ -1,4 +1,5 @@
 ﻿using Avalonia;
+using ReactiveUI;
 
 namespace NexusMods.App.UI.Controls.WorkspaceGrid;
 
@@ -222,4 +223,65 @@ public class LayoutSolver
     }
 
     private const double Tolerance = 0.0000001f;
+
+    public void MoveSeparator(SeparatorHandle separatorKey, double relativeMovement)
+    {
+        switch (separatorKey.Direction)
+        {
+            case Direction.Horizontal:
+            {
+                var paneB = _paneDefinitions.First(x => x.Id == separatorKey.PaneB);
+                
+                // Cache some values because we're about to chance the values that are pointed to by paneA/paneB
+                var splitPoint = paneB.Left;
+                
+                // There could be multiple other controls aligned with the separator, so we need to move them all
+                foreach (var pane in _paneDefinitions)
+                {
+                    // If the pane is to the right of the separator, move it and resize it
+                    if (EqualsWithTolerance(pane.Left, splitPoint))
+                    {
+                        pane.Width += relativeMovement;
+                        pane.Left -= relativeMovement;
+                    }
+
+                    // If the pane is to the left of the separator, resize it
+                    if (EqualsWithTolerance(pane.Left + pane.Width, splitPoint))
+                    {
+                        pane.Width -= relativeMovement;
+                    }
+                }
+                break;
+            }
+            case Direction.Vertical:
+            {
+                var paneB = _paneDefinitions.First(x => x.Id == separatorKey.PaneB);
+                
+                // Cache some values because we're about to chance the values that are pointed to by paneA/paneB
+                var splitPoint = paneB.Top;
+                
+
+                // There could be multiple other controls aligned with the separator, so we need to move them all
+                foreach (var pane in _paneDefinitions)
+                {
+                    // If the pane is below the separator, move it and resize it
+                    if (EqualsWithTolerance(pane.Top, splitPoint))
+                    {
+                        pane.Height += relativeMovement;
+                        pane.Top -= relativeMovement;
+                    }
+
+                    // If the pane is above the separator, resize it
+                    if (EqualsWithTolerance(pane.Top + pane.Height, splitPoint))
+                    {
+                        pane.Height -= relativeMovement;
+                    }
+                }
+
+                break;
+            }
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+    }
 }

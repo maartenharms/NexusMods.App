@@ -57,6 +57,7 @@ public class WorkspaceGridViewModel : AViewModel<IWorkspaceGridViewModel>, IWork
                 newPane.SetLogicalBounds(newPane.LogicalBounds.WithX(pane.LogicalBounds.Left + newWidth).WithWidth(newWidth));
                 pane.SetLogicalBounds(pane.LogicalBounds.WithWidth(newWidth));
                 AddPane(newPane);
+                UpdatePane(pane);
                 break;
             }
             case Direction.Horizontal:
@@ -67,10 +68,19 @@ public class WorkspaceGridViewModel : AViewModel<IWorkspaceGridViewModel>, IWork
                 newPane.SetLogicalBounds(newPane.LogicalBounds.WithY(pane.LogicalBounds.Top + newHeight).WithHeight(newHeight));
                 pane.SetLogicalBounds(pane.LogicalBounds.WithHeight(newHeight));
                 AddPane(newPane);
+                UpdatePane(pane);
                 break;
             }
             default:
                 throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
         }
+    }
+
+    private void UpdatePane(IPaneViewModel pane)
+    {
+        _panes.Edit(x =>
+        {
+            x.AddOrUpdate(pane);
+        });
     }
 }

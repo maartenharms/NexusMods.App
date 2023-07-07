@@ -6,6 +6,7 @@ using NexusMods.App.UI.Controls.Spine.Buttons.Download;
 using NexusMods.App.UI.Controls.Spine.Buttons.Icon;
 using NexusMods.App.UI.Controls.Spine.Buttons.Image;
 using NexusMods.App.UI.Controls.TopBar;
+using NexusMods.App.UI.Controls.WorkspaceGrid;
 using NexusMods.App.UI.LeftMenu;
 using NexusMods.App.UI.LeftMenu.Downloads;
 using NexusMods.App.UI.LeftMenu.Game;
@@ -64,6 +65,8 @@ public static class Services
             .AddViewModel<PlaceholderDesignViewModel, IPlaceholderViewModel>()
             .AddViewModel<SpineViewModel, ISpineViewModel>()
             .AddViewModel<TopBarViewModel, ITopBarViewModel>()
+            .AddViewModel<PaneViewModel, IPaneViewModel>()
+            .AddViewModel<WorkspaceGridViewModel, IWorkspaceGridViewModel>()
             .AddViewModel<DownloadButtonViewModel, IDownloadButtonViewModel>()
 
             // Views

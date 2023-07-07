@@ -53,7 +53,7 @@ public class Handle : Border
     public Direction Direction { get; init; }
     
     
-    
+    /*
     
     protected override void OnPointerPressed(PointerPressedEventArgs e)
     {
@@ -85,4 +85,5 @@ public class Handle : Border
         }
         base.OnPointerMoved(e);
     }
+    */
 }

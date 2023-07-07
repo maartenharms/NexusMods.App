@@ -10,6 +10,9 @@ public partial class WorkspaceGridScratchSpace : UserControl
     public WorkspaceGridScratchSpace()
     {
         InitializeComponent();
+        EditMode.IsChecked = true;
+        WorkspaceControl.AddPane();
+        WorkspaceControl.AddPane();
     }
 
     private void AddPanel(object? sender, RoutedEventArgs e)

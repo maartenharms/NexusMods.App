@@ -25,6 +25,19 @@ public class WorkspaceGrid : Panel
         _children = new ();
         _handles = new ();
         SyncChildren();
+
+        _testItem = new Rectangle()
+        {
+            Width = 200,
+            Height = 200,
+            Fill = Brushes.Red,
+            ContextFlyout = new Flyout()
+            {
+                Content = new TextBlock() { Text = "Test" }
+            }
+        };
+        
+        VisualChildren.Add(_testItem);
     }
 
     public LayoutSolver Solver { get; set; }
@@ -32,6 +45,7 @@ public class WorkspaceGrid : Panel
     public IEnumerable<SeparatorHandle> Handles => _handles.Keys;
 
     private bool _editMode = false;
+    private readonly Rectangle _testItem;
 
     public bool EditMode
     {
@@ -113,10 +127,14 @@ public class WorkspaceGrid : Panel
         SyncChildren();
         SyncHandles();
         Solver.Solve(finalSize);
+        
+        HashSet<Control> seen = new ();
+        
         foreach (var pane in Solver.PaneDefinitions)
         {
             var visual = _children[pane.Id];
             visual.Arrange(new Rect(pane.ActualLeft, pane.ActualTop, pane.ActualWidth, pane.ActualHeight));
+            seen.Add(visual);
         }
         
         foreach (var (handle, visual) in _handles)
@@ -147,13 +165,28 @@ public class WorkspaceGrid : Panel
 
                 visual.Arrange(new Rect(left, sideB.ActualTop - (visual.Height / 2), visual.Width, visual.Height));
             }
+
+            seen.Add(visual);
         }
+        
+        
+        foreach (var visual in VisualChildren.OfType<Control>())
+        {
+            if (!seen.Contains(visual))
+            {
+                visual.Arrange(new Rect(0, 0, 200, 200));
+            }
+        }
+        
+        _testItem.Arrange(new Rect(20, 20, 200, 200));
         
         return finalSize;
     }
 
     private void SyncChildren()
     {
+
+        
         foreach (var child in _children)
         {
             if (Solver.PaneDefinitions.Any(pane => pane.Id == child.Key))
@@ -177,6 +210,7 @@ public class WorkspaceGrid : Panel
             _children.Add(pane.Id, newVisual);
             VisualChildren.Add(newVisual);
         }
+
     }
 
     public void MoveHandle(SeparatorHandle handle, Point delta)

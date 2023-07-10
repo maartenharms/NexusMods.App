@@ -12,21 +12,29 @@ using ReactiveUI;
 
 namespace NexusMods.UI.Tests;
 
-public class AViewTest<TView, TViewModel, TViewModelInterface> : AUiTest, IAsyncLifetime
+public abstract class AViewTest<TView, TViewModel, TViewModelInterface> : AUiTest, IAsyncLifetime
     where TViewModelInterface : class, IViewModelInterface
-    where TViewModel : TViewModelInterface, new()
     where TView : ReactiveUserControl<TViewModelInterface>, new()
+    where TViewModel : AViewModel<TViewModelInterface>, TViewModelInterface
 {
     private readonly AvaloniaApp _app;
-    private ControlHost<TView,TViewModel,TViewModelInterface>? _host;
+    private ControlHost<TView, TViewModel, TViewModelInterface>? _host;
+    private readonly bool _useDiForVm;
 
 
-    protected ControlHost<TView,TViewModel,TViewModelInterface> Host => _host!;
+    protected ControlHost<TView, TViewModel, TViewModelInterface> Host => _host!;
     protected TViewModel ViewModel => _host!.ViewModel;
     protected TView View => _host!.View;
 
-    protected AViewTest(IServiceProvider provider) : base(provider)
+    /// <summary>
+    /// Creates a new view test, if useDiForVm is true, the viewmodel will be resolved from the DI container otherwise
+    /// it will be created by its default constructor.
+    /// </summary>
+    /// <param name="provider"></param>
+    /// <param name="useDiForVm"></param>
+    protected AViewTest(IServiceProvider provider, bool useDiForVm = false) : base(provider)
     {
+        _useDiForVm = useDiForVm;
         _app = provider.GetRequiredService<AvaloniaApp>();
     }
 
@@ -52,11 +60,19 @@ public class AViewTest<TView, TViewModel, TViewModelInterface> : AUiTest, IAsync
             return Task.FromResult(res);
         });
     }
-
-
+    
     public virtual async Task InitializeAsync()
     {
-        _host = await _app.GetControl<TView, TViewModel, TViewModelInterface>();
+
+        if (_useDiForVm)
+        {
+            _host = await _app.GetControl<TView, TViewModel, TViewModelInterface>(() => (TViewModel)Provider.GetRequiredService<TViewModelInterface>());
+        }
+        else
+        {
+            _host = await _app.GetControl<TView, TViewModel, TViewModelInterface>(() => Activator.CreateInstance<TViewModel>());
+        }
+
         await PostInitializeSetup();
     }
 

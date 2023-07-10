@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using Avalonia;
 using DynamicData;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,8 +14,19 @@ public class WorkspaceGridViewModel : AViewModel<IWorkspaceGridViewModel>, IWork
 
     private ReadOnlyObservableCollection<IPaneViewModel> _panesFiltered = Initializers.ReadOnlyObservableCollection<IPaneViewModel>();
     public ReadOnlyObservableCollection<IPaneViewModel> Panes => _panesFiltered;
+    
+    private readonly SourceCache<Separator, Separator> _handles = new(x => x);
+    
+    private ReadOnlyObservableCollection<Separator> _handlesFiltered = Initializers.ReadOnlyObservableCollection<Separator>();
+    public ReadOnlyObservableCollection<Separator> Handles => _handlesFiltered;
 
 
+    private static readonly PaneComparer PaneComparer = new();
+
+    /// <summary>
+    /// DI constructor.
+    /// </summary>
+    /// <param name="provider"></param>
     public WorkspaceGridViewModel(IServiceProvider provider)
     {
         var pane = provider.GetRequiredService<IPaneViewModel>();
@@ -23,12 +35,22 @@ public class WorkspaceGridViewModel : AViewModel<IWorkspaceGridViewModel>, IWork
         this.WhenActivated(d =>
         {
             _panes.Connect()
+                .Sort(PaneComparer)
                 .Bind(out _panesFiltered)
+                .Subscribe()
+                .DisposeWith(d);
+            
+            _handles.Connect()
+                .Bind(out _handlesFiltered)
                 .Subscribe()
                 .DisposeWith(d);
         });
     }
     
+    /// <summary>
+    /// Adds the given pane to the grid.
+    /// </summary>
+    /// <param name="pane"></param>
     public void AddPane(IPaneViewModel pane)
     {
         _panes.Edit(x =>
@@ -36,6 +58,7 @@ public class WorkspaceGridViewModel : AViewModel<IWorkspaceGridViewModel>, IWork
             x.AddOrUpdate(pane);
         });
     }
+    
 
     /// <summary>
     /// Splits the given pane in the given direction. Direction here is a bit confusing, as it's the direction of the
@@ -58,6 +81,7 @@ public class WorkspaceGridViewModel : AViewModel<IWorkspaceGridViewModel>, IWork
                 pane.SetLogicalBounds(pane.LogicalBounds.WithWidth(newWidth));
                 AddPane(newPane);
                 UpdatePane(pane);
+                AddHandle(pane, newPane, direction);
                 break;
             }
             case Direction.Horizontal:
@@ -73,6 +97,19 @@ public class WorkspaceGridViewModel : AViewModel<IWorkspaceGridViewModel>, IWork
             }
             default:
                 throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
+        }
+    }
+
+    private void AddHandle(IPaneViewModel a, IPaneViewModel b, Direction direction)
+    {
+        _handles.AddOrUpdate(new Separator(a, b, direction));
+    }
+
+    public void Arrange(Size size)
+    {
+        foreach (var pane in _panes.Items)
+        {
+            pane.Arrange(size);
         }
     }
 

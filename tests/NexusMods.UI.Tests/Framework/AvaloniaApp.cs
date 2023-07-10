@@ -16,6 +16,9 @@ namespace NexusMods.UI.Tests.Framework;
 /// </summary>
 public class AvaloniaApp : IDisposable
 {
+    public const int DefaultWidth = 1280;
+    public const int DefaultHeight = 768;
+    
     private readonly IServiceProvider _provider;
     private bool _disposed;
     private readonly ILogger<AvaloniaApp> _logger;
@@ -84,10 +87,10 @@ public class AvaloniaApp : IDisposable
     /// <typeparam name="TVm">The VM instance to use when constructing the view (should be the Design variant)</typeparam>
     /// <typeparam name="TInterface">The VM interface expected by the view and view model</typeparam>
     /// <returns></returns>
-    public async Task<ControlHost<TView, TVm, TInterface>> GetControl<TView, TVm, TInterface>()
+    public async Task<ControlHost<TView, TViewModel, TInterface>> GetControl<TView, TViewModel, TInterface>(Func<TViewModel> vmFactory)
         where TView : ReactiveUserControl<TInterface>, new()
         where TInterface : class, IViewModelInterface
-        where TVm : TInterface, new()
+        where TViewModel : AViewModel<TInterface>, TInterface
     {
         var tcs = new TaskCompletionSource<bool>();
         var (waitHandle, host) = await Dispatcher.UIThread.InvokeAsync(() =>
@@ -96,13 +99,14 @@ public class AvaloniaApp : IDisposable
             var window = new Window();
 
             var control = new TView();
-            var context = new TVm();
+            var context = vmFactory();
+            control.ViewModel = context;
             window.Content = control;
             window.Width = 1280;
             window.Height = 720;
             var waitHandle = context.Activator.Activated.Subscribe(_ => tcs.TrySetResult(true));
             window.Show();
-            return (waitHandle, new ControlHost<TView, TVm, TInterface>
+            return (waitHandle, new ControlHost<TView, TViewModel, TInterface>
             {
                 Window = window,
                 View = control,

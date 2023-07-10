@@ -13,13 +13,13 @@ namespace NexusMods.UI.Tests.Framework;
 /// <typeparam name="TView"></typeparam>
 /// <typeparam name="TVm"></typeparam>
 /// <typeparam name="TInterface"></typeparam>
-public class ControlHost<TView, TVm, TInterface> : IAsyncDisposable
+public class ControlHost<TView, TViewModel, TInterface> : IAsyncDisposable
     where TView : ReactiveUserControl<TInterface>
     where TInterface : class, IViewModelInterface
-    where TVm : TInterface
+    where TViewModel : AViewModel<TInterface>, TInterface
 {
     private readonly TView? _view;
-    private readonly TVm? _viewModel;
+    private readonly TViewModel? _viewModel;
     private readonly Window? _window;
     private readonly AvaloniaApp? _app;
 
@@ -35,7 +35,7 @@ public class ControlHost<TView, TVm, TInterface> : IAsyncDisposable
     /// <summary>
     /// The view model backing the view
     /// </summary>
-    public TVm ViewModel
+    public TViewModel ViewModel
     {
         get => _viewModel!;
         init => _viewModel = value;

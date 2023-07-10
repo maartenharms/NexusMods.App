@@ -28,6 +28,7 @@ public class App : Application
     {
         Locator.CurrentMutable.UnregisterCurrent(typeof(IViewLocator));
         Locator.CurrentMutable.Register(() => _provider.GetRequiredService<InjectedViewLocator>(), typeof(IViewLocator));
+        Locator.CurrentMutable.Register(() => _provider);
 
         var loggerFactory = _provider.GetRequiredService<ILoggerFactory>();
         Locator.CurrentMutable.UseMicrosoftExtensionsLoggingWithWrappingFullLogger(loggerFactory);

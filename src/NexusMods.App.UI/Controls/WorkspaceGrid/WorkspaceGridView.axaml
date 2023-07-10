@@ -1,0 +1,13 @@
+﻿<reactiveUi:ReactiveUserControl x:TypeArguments="workspaceGrid:IWorkspaceGridViewModel" xmlns="https://github.com/avaloniaui"
+                                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                                xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                                xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                                xmlns:reactiveUi="http://reactiveui.net"
+                                xmlns:workspaceGrid="clr-namespace:NexusMods.App.UI.Controls.WorkspaceGrid"
+                                mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="820"
+                                x:Class="NexusMods.App.UI.Controls.WorkspaceGrid.WorkspaceGridView">
+    <Canvas x:Name="LayoutCanvas">
+        
+    </Canvas>
+</reactiveUi:ReactiveUserControl>
+

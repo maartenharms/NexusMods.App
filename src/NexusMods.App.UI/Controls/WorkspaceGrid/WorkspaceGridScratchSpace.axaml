@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:workspaceGrid="clr-namespace:NexusMods.App.UI.Controls.WorkspaceGrid"
+             xmlns:reactiveUi="http://reactiveui.net"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="NexusMods.App.UI.Controls.WorkspaceGrid.WorkspaceGridScratchSpace">
     <Grid RowDefinitions="Auto, *">
@@ -10,7 +11,7 @@
             <Button Click="AddPanel"><TextBlock>Add Panel</TextBlock></Button>
             <CheckBox Foreground="White" x:Name="EditMode" IsCheckedChanged="ChangeEditMode"><TextBlock>Edit Mode</TextBlock></CheckBox>
         </StackPanel>
-        <workspaceGrid:WorkspaceGrid x:Name="WorkspaceControl" Grid.Row="1" />
+        <reactiveUi:ViewModelViewHost Grid.Row="1" x:Name="WorkspaceGridHost"></reactiveUi:ViewModelViewHost>
     </Grid>
 </UserControl>
 

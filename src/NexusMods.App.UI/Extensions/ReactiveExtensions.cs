@@ -1,4 +1,5 @@
 ﻿using Avalonia;
+using Avalonia.Collections;
 using Avalonia.Controls;
 using DynamicData;
 
@@ -70,5 +71,31 @@ public static class ReactiveExtensions
         TTarget target) where TTarget : StyledElement
     {
         return obs.BindToClasses(target, "Active");
+    }
+
+    /// <summary>
+    /// Binds the given observable to the given target collection, adding and removing items as needed.
+    /// </summary>
+    /// <param name="items"></param>
+    /// <param name="target"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    public static IDisposable BindToUi<T>(this IObservable<IChangeSet<T>> items, AvaloniaList<T> target)
+    {
+        return items.QueryWhenChanged()
+            .Subscribe(itms =>
+            {
+                foreach (var item in itms)
+                {
+                    if (!target.Contains(item))
+                        target.Add(item);
+                }
+
+                foreach (var child in target.ToList())
+                {
+                    if (!itms.Contains(child))
+                        target.Remove(child);
+                }
+            });
     }
 }

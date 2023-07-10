@@ -96,6 +96,8 @@ public static class Services
             .AddView<Spine, ISpineViewModel>()
             .AddView<TopBarView, ITopBarViewModel>()
             .AddView<DownloadButtonView, IDownloadButtonViewModel>()
+            .AddView<PaneView, IPaneViewModel>()
+            .AddView<WorkspaceGridView, IWorkspaceGridViewModel>()
 
             // Other
             .AddSingleton<InjectedViewLocator>()

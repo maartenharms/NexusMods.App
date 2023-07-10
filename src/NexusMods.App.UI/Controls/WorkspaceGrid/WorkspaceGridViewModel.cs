@@ -15,10 +15,10 @@ public class WorkspaceGridViewModel : AViewModel<IWorkspaceGridViewModel>, IWork
     private ReadOnlyObservableCollection<IPaneViewModel> _panesFiltered = Initializers.ReadOnlyObservableCollection<IPaneViewModel>();
     public ReadOnlyObservableCollection<IPaneViewModel> Panes => _panesFiltered;
     
-    private readonly SourceCache<Separator, Separator> _handles = new(x => x);
+    private readonly SourceCache<ISeparatorViewModel, (PaneId, PaneId, Direction)> _handles = new(x => x.Id);
     
-    private ReadOnlyObservableCollection<Separator> _handlesFiltered = Initializers.ReadOnlyObservableCollection<Separator>();
-    public ReadOnlyObservableCollection<Separator> Handles => _handlesFiltered;
+    private ReadOnlyObservableCollection<ISeparatorViewModel> _handlesFiltered = Initializers.ReadOnlyObservableCollection<ISeparatorViewModel>();
+    public ReadOnlyObservableCollection<ISeparatorViewModel> Handles => _handlesFiltered;
 
 
     private static readonly PaneComparer PaneComparer = new();
@@ -99,10 +99,26 @@ public class WorkspaceGridViewModel : AViewModel<IWorkspaceGridViewModel>, IWork
                 throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
         }
     }
+    
+    public void Split()
+    {
+        var pane = Panes
+            .OrderByDescending(x => x.ActualBounds.Width * x.ActualBounds.Height)
+            .ThenBy(x => x.LogicalBounds.Top)
+            .ThenBy(x => x.LogicalBounds.Left)
+            .First();
+        
+        Split(pane, pane.ActualBounds.Height >= pane.ActualBounds.Width ? Direction.Horizontal : Direction.Vertical);
+    }
 
     private void AddHandle(IPaneViewModel a, IPaneViewModel b, Direction direction)
     {
-        _handles.AddOrUpdate(new Separator(a, b, direction));
+        _handles.AddOrUpdate(new SeparatorViewModel
+        {
+            PaneA = a,
+            PaneB = b,
+            Direction = direction
+        });
     }
 
     public void Arrange(Size size)

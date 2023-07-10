@@ -1,0 +1,26 @@
+﻿<reactiveUi:ReactiveUserControl x:TypeArguments="workspaceGrid:ISeparatorViewModel"
+                                xmlns="https://github.com/avaloniaui"
+                                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                                xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                                xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                                xmlns:reactiveUi="http://reactiveui.net"
+                                xmlns:workspaceGrid="clr-namespace:NexusMods.App.UI.Controls.WorkspaceGrid"
+                                xmlns:avalonia="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+                                mc:Ignorable="d" d:DesignWidth="32" d:DesignHeight="150"
+                                Width="32"
+                                Height="100"
+                                x:Class="NexusMods.App.UI.Controls.WorkspaceGrid.HorizontalSeparatorView">
+    <Border BorderThickness="1" BorderBrush="Gray" CornerRadius="16" Background="#010101">
+        <StackPanel Orientation="Vertical" Spacing="8" Margin="8">
+            <Button Classes="Invisible" HorizontalAlignment="Center" Width="24" Height="24"><avalonia:Icon Classes="ArrowCollapseLeft" FontSize="14"/></Button>
+            <avalonia:Icon FontSize="16" Foreground="White" Classes="DragVerticalVariant" 
+                           x:Name="MoveIcon"
+                           PointerPressed="MoveIcon_OnPointerPressed"
+                           PointerMoved="MoveIcon_OnPointerMoved"
+                           PointerReleased="MoveIcon_OnPointerReleased"></avalonia:Icon>
+            <Button Classes="Invisible" HorizontalAlignment="Center" Width="24" Height="24"><avalonia:Icon Classes="ArrowCollapseRight" FontSize="14"/></Button>
+        </StackPanel>
+    </Border>
+</reactiveUi:ReactiveUserControl>
+
+

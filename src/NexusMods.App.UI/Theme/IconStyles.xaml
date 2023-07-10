@@ -12,10 +12,16 @@
                     <Setter Property="Margin" Value="2"></Setter>
                 </Style>
             </WrapPanel.Styles>
+            <icons:Icon Classes="ArrowCollapseDown"></icons:Icon>
+            <icons:Icon Classes="ArrowCollapseLeft"></icons:Icon>
+            <icons:Icon Classes="ArrowCollapseRight"></icons:Icon>
+            <icons:Icon Classes="ArrowCollapseUp"></icons:Icon>
             <icons:Icon Classes="Bell"></icons:Icon>
             <icons:Icon Classes="CheckUnderline"></icons:Icon>
             <icons:Icon Classes="ClearAll"></icons:Icon>
             <icons:Icon Classes="Cog"></icons:Icon>
+            <icons:Icon Classes="DragHorizontalVariant"></icons:Icon>
+            <icons:Icon Classes="DragVerticalVariant"></icons:Icon>
             <icons:Icon Classes="Download"></icons:Icon>
             <icons:Icon Classes="Help"></icons:Icon>
             <icons:Icon Classes="History"></icons:Icon>
@@ -36,6 +42,22 @@
        https://pictogrammers.com/library/mdi/       
      -->
     
+    <Style Selector="icons|Icon.ArrowCollapseDown">
+        <Setter Property="Value" Value="mdi-arrow-collapse-down"></Setter>
+    </Style>
+    
+    <Style Selector="icons|Icon.ArrowCollapseLeft">
+        <Setter Property="Value" Value="mdi-arrow-collapse-left"></Setter>
+    </Style>
+    
+    <Style Selector="icons|Icon.ArrowCollapseRight">
+        <Setter Property="Value" Value="mdi-arrow-collapse-right"></Setter>
+    </Style>
+    
+    <Style Selector="icons|Icon.ArrowCollapseUp">
+        <Setter Property="Value" Value="mdi-arrow-collapse-up"></Setter>
+    </Style>
+    
     <Style Selector="icons|Icon.Bell">
         <Setter Property="Value" Value="mdi-bell"></Setter>
     </Style>
@@ -46,6 +68,14 @@
     
     <Style Selector="icons|Icon.Cog">
         <Setter Property="Value" Value="mdi-cog" />
+    </Style>
+    
+    <Style Selector="icons|Icon.DragHorizontalVariant">
+        <Setter Property="Value" Value="mdi-drag-horizontal-variant" />
+    </Style>
+
+    <Style Selector="icons|Icon.DragVerticalVariant">
+        <Setter Property="Value" Value="mdi-drag-vertical-variant" />
     </Style>
     
     <Style Selector="icons|Icon.Download">

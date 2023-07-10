@@ -8,10 +8,11 @@
                                 xmlns:workspaceGrid="clr-namespace:NexusMods.App.UI.Controls.WorkspaceGrid"
                                 mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                                 x:Class="NexusMods.App.UI.Controls.WorkspaceGrid.PaneView">
-    <Grid RowDefinitions="32, *" ColumnDefinitions="*, 32">
-        <Rectangle Grid.Row="0" Fill="Brown"></Rectangle>
-        <Rectangle Grid.Row="1" Fill="OliveDrab"></Rectangle>
-        <Rectangle Grid.Row="0" Grid.Column="1" Fill="DarkGoldenrod" Grid.RowSpan="2"></Rectangle>
-    </Grid>
+    <Border BorderThickness="1" BorderBrush="White" CornerRadius="16" ClipToBounds="True">
+        <Grid RowDefinitions="32, *" ColumnDefinitions="*">
+            <Rectangle Grid.Row="0" Fill="Brown"></Rectangle>
+            <Rectangle Grid.Row="1" Fill="OliveDrab"></Rectangle>
+        </Grid>
+    </Border>
 </reactiveUi:ReactiveUserControl>
 

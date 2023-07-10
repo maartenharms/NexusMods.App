@@ -68,6 +68,7 @@ public static class Services
             .AddViewModel<PaneViewModel, IPaneViewModel>()
             .AddViewModel<WorkspaceGridViewModel, IWorkspaceGridViewModel>()
             .AddViewModel<DownloadButtonViewModel, IDownloadButtonViewModel>()
+            .AddViewModel<SeparatorViewModel, ISeparatorViewModel>()
 
             // Views
             .AddView<CompletedView, ICompletedViewModel>()
@@ -98,6 +99,7 @@ public static class Services
             .AddView<DownloadButtonView, IDownloadButtonViewModel>()
             .AddView<PaneView, IPaneViewModel>()
             .AddView<WorkspaceGridView, IWorkspaceGridViewModel>()
+            .AddView<HorizontalSeparatorView, ISeparatorViewModel>()
 
             // Other
             .AddSingleton<InjectedViewLocator>()

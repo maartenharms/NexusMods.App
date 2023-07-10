@@ -2,6 +2,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media;
 using Avalonia.ReactiveUI;
 using DynamicData;
 using DynamicData.Binding;
@@ -26,6 +27,15 @@ public partial class WorkspaceGridView : ReactiveUserControl<IWorkspaceGridViewM
                 .Transform(CreatePaneView)
                 .BindToUi(LayoutCanvas.Children)
                 .DisposeWith(d);
+
+            ViewModel!.Handles
+                .ToObservableChangeSet()
+                .OnUI()
+                .Transform(CreateSeparatorView)
+                .BindToUi(LayoutCanvas.Children)
+                .DisposeWith(d);
+                
+                
             
             if (_size is not null)
                 ViewModel.Arrange(_size.Value);
@@ -51,6 +61,26 @@ public partial class WorkspaceGridView : ReactiveUserControl<IWorkspaceGridViewM
             ViewModel = paneViewModel
         };
         return host;
+    }
+
+    private Control CreateSeparatorView(ISeparatorViewModel vm)
+    {
+        if (vm.Direction == Direction.Vertical)
+        {
+            return new HorizontalSeparatorView()
+            {
+                ViewModel = vm,
+                ZIndex = 100
+            };
+        }
+        else
+        {
+            return new VerticalSeparatorView()
+            {
+                ViewModel = vm,
+                ZIndex = 100
+            };
+        }
     }
 }
 

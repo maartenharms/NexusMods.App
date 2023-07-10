@@ -2,6 +2,7 @@
 using Avalonia.Collections;
 using Avalonia.Controls;
 using DynamicData;
+using DynamicData.Alias;
 
 namespace NexusMods.App.UI.Extensions;
 
@@ -82,20 +83,25 @@ public static class ReactiveExtensions
     /// <returns></returns>
     public static IDisposable BindToUi<T>(this IObservable<IChangeSet<T>> items, AvaloniaList<T> target)
     {
-        return items.QueryWhenChanged()
-            .Subscribe(itms =>
+        return items.Subscribe(changeSet =>
+        {
+            foreach (var change in changeSet)
             {
-                foreach (var item in itms)
+                switch (change.Reason)
                 {
-                    if (!target.Contains(item))
-                        target.Add(item);
+                    case ListChangeReason.AddRange:
+                        target.AddRange(change.Range);
+                        break;
+                    case ListChangeReason.Add:
+                        target.Add(change.Item.Current);
+                        break;
+                    case ListChangeReason.Replace:
+                        target.Replace(change.Item.Previous.Value, change.Item.Current);
+                        break;
+                    default:
+                        throw new NotImplementedException($"Change reason not implemented {change.Reason}");
                 }
-
-                foreach (var child in target.ToList())
-                {
-                    if (!itms.Contains(child))
-                        target.Remove(child);
-                }
-            });
+            }
+        });
     }
 }

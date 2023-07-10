@@ -10,10 +10,12 @@ public class SeparatorViewModel : AViewModel<ISeparatorViewModel>, ISeparatorVie
     {
         if (Direction == Direction.Vertical)
         {
-            PaneA.SetLogicalBounds(PaneA.LogicalBounds.WithWidth(PaneA.LogicalBounds.Width + delta));
+            var logicalDelta = delta / (PaneA.ActualBounds.Width / PaneA.LogicalBounds.Width);
+            Console.WriteLine("Moving vertical separator by {0} logical units", logicalDelta);
+            PaneA.SetLogicalBounds(PaneA.LogicalBounds.WithWidth(PaneA.LogicalBounds.Width - logicalDelta));
             PaneB.SetLogicalBounds(PaneB.LogicalBounds
-                .WithX(PaneB.LogicalBounds.X + delta)
-                .WithWidth(PaneB.LogicalBounds.Width - delta));
+                .WithX(PaneB.LogicalBounds.X - logicalDelta)
+                .WithWidth(PaneB.LogicalBounds.Width + logicalDelta));
 
         }
     }

@@ -9,7 +9,7 @@ public interface ISeparatorViewModel : IViewModelInterface
     public (PaneId, PaneId, Direction) Id => (PaneA.Id, PaneB.Id, Direction);
     
     /// <summary>
-    /// Moves the separator by the given delta.
+    /// Moves the separator by the given delta in screen pixels
     /// </summary>
     /// <param name="delta"></param>
     void Move(double delta);

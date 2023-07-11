@@ -32,6 +32,8 @@
             <icons:Icon Classes="PauseCircleFilled"></icons:Icon>
             <icons:Icon Classes="RemoveCircleOutline"></icons:Icon>
             <icons:Icon Classes="Star"></icons:Icon>
+            <icons:Icon Classes="SwapHorizontal"></icons:Icon>
+            <icons:Icon Classes="SwapVertical"></icons:Icon>
             <icons:Icon Classes="TrashCanOutline"></icons:Icon>
         </WrapPanel>
     </Design.PreviewWith>
@@ -120,6 +122,14 @@
     
     <Style Selector="icons|Icon.Star">
         <Setter Property="Value" Value="mdi-star"></Setter>
+    </Style>
+    
+    <Style Selector="icons|Icon.SwapHorizontal">
+        <Setter Property="Value" Value="mdi-swap-horizontal"></Setter>
+    </Style>
+    
+    <Style Selector="icons|Icon.SwapVertical">
+        <Setter Property="Value" Value="mdi-swap-vertical"></Setter>
     </Style>
     
     <Style Selector="icons|Icon.TrashCanOutline">

@@ -3,7 +3,6 @@ using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Markup.Xaml;
 using Avalonia.ReactiveUI;
 using ReactiveUI;
 
@@ -50,7 +49,6 @@ public partial class HorizontalSeparatorView : ReactiveUserControl<ISeparatorVie
     {
         Console.WriteLine("Mouse Down");
         _isPressed = true;
-        //FlyoutBase.ShowAttachedFlyout(this);
         _originalPosition = e.GetPosition(Parent! as Control);
         
         base.OnPointerPressed(e);
@@ -65,7 +63,6 @@ public partial class HorizontalSeparatorView : ReactiveUserControl<ISeparatorVie
             var delta = _originalPosition - pos;
             ViewModel!.Move(delta.X);
             _originalPosition = pos;
-            Console.WriteLine($"Moved {delta}, pos {pos}");
         }
         base.OnPointerMoved(e);
     }
@@ -74,7 +71,6 @@ public partial class HorizontalSeparatorView : ReactiveUserControl<ISeparatorVie
     {
         _isPressed = false;
         
-        Console.WriteLine($"Released {_originalPosition}");
         base.OnPointerReleased(e);
     }
 }

@@ -7,14 +7,13 @@
                                 xmlns:workspaceGrid="clr-namespace:NexusMods.App.UI.Controls.WorkspaceGrid"
                                 xmlns:avalonia="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
                                 mc:Ignorable="d" d:DesignWidth="150" d:DesignHeight="32"
-                                Width="150"
+                                Width="48"
                                 Height="32"
                                 x:Class="NexusMods.App.UI.Controls.WorkspaceGrid.VerticalSeparatorView">
-    <Border BorderThickness="1" BorderBrush="Gray" CornerRadius="16" Background="#010101">
-        <StackPanel Orientation="Horizontal" Spacing="8" Margin="8" HorizontalAlignment="Center">
-            <Button Classes="Invisible" VerticalAlignment="Center" Width="24" Height="24"><avalonia:Icon Classes="ArrowCollapseUp" FontSize="14"/></Button>
-            <avalonia:Icon FontSize="16" Foreground="White" Classes="DragHorizontalVariant" x:Name="MoveIcon"></avalonia:Icon>
-            <Button Classes="Invisible" VerticalAlignment="Center" Width="24" Height="24"><avalonia:Icon Classes="ArrowCollapseDown" FontSize="14"/></Button>
-        </StackPanel>
+    <Border BorderThickness="1" BorderBrush="Gray" CornerRadius="16" Background="#010101"
+            PointerPressed="MoveIcon_OnPointerPressed"
+            PointerMoved="MoveIcon_OnPointerMoved"
+            PointerReleased="MoveIcon_OnPointerReleased">
+        <avalonia:Icon FontSize="16" Foreground="White" Classes="DragHorizontalVariant" x:Name="MoveIcon"></avalonia:Icon>
     </Border>
 </reactiveUi:ReactiveUserControl>

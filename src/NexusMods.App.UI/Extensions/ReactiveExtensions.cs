@@ -98,6 +98,9 @@ public static class ReactiveExtensions
                     case ListChangeReason.Replace:
                         target.Replace(change.Item.Previous.Value, change.Item.Current);
                         break;
+                    case ListChangeReason.Remove:
+                        target.Remove(change.Item.Current);
+                        break;
                     default:
                         throw new NotImplementedException($"Change reason not implemented {change.Reason}");
                 }

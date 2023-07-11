@@ -13,7 +13,7 @@
     <Border BorderThickness="1" BorderBrush="Gray" CornerRadius="16" Background="#010101">
         <StackPanel Orientation="Vertical" Spacing="8" Margin="8">
             <Button Classes="Invisible" HorizontalAlignment="Center" Width="24" Height="24"><avalonia:Icon Classes="ArrowCollapseLeft" FontSize="14"/></Button>
-            <avalonia:Icon FontSize="16" Foreground="White" Classes="DragVerticalVariant" 
+            <avalonia:Icon FontSize="16" Foreground="White" Width="32" Height="20" Classes="DragVerticalVariant" 
                            x:Name="MoveIcon"
                            PointerPressed="MoveIcon_OnPointerPressed"
                            PointerMoved="MoveIcon_OnPointerMoved"

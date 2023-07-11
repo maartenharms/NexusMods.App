@@ -23,7 +23,7 @@ public partial class HorizontalSeparatorView : ReactiveUserControl<ISeparatorVie
             var panelABounds = this.WhenAnyValue(view => view.ViewModel!.PaneA.ActualBounds);
             var panelBBounds = this.WhenAnyValue(view => view.ViewModel!.PaneB.ActualBounds);
 
-            panelBBounds.Select(view => view.Width - Width / 2)
+            panelBBounds.Select(view => view.Left - Width / 2)
                 .OnUI()
                 .Subscribe(val => Canvas.SetLeft(this, val))
                 .DisposeWith(d);

@@ -53,4 +53,22 @@ public class SeparatorViewModel : AViewModel<ISeparatorViewModel>, ISeparatorVie
             }
         }
     }
+
+    public void SplitA()
+    {
+        Workspace.Split(PaneA, Direction == Direction.Horizontal ? Direction.Vertical : Direction.Horizontal);
+    }
+
+    public void SplitB()
+    {
+        Workspace.Split(PaneB, Direction == Direction.Horizontal ? Direction.Vertical : Direction.Horizontal);
+    }
+
+    public void Swap()
+    {
+        var tmpLoc = PaneA.LogicalBounds;
+        PaneA.SetLogicalBounds(PaneB.LogicalBounds);
+        PaneB.SetLogicalBounds(tmpLoc);
+        Workspace.Refresh(PaneA, PaneB);
+    }
 }

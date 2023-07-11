@@ -25,4 +25,10 @@ public interface IWorkspaceGridViewModel : IViewModelInterface
     /// </summary>
     /// <param name="size"></param>
     void Arrange(Size size);
+
+    /// <summary>
+    /// Issues update notifications for the given panes.
+    /// </summary>
+    /// <param name="panes"></param>
+    void Refresh(params IPaneViewModel[] panes);
 }

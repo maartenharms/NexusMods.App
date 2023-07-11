@@ -8,9 +8,10 @@
                                 xmlns:workspaceGrid="clr-namespace:NexusMods.App.UI.Controls.WorkspaceGrid"
                                 mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                                 x:Class="NexusMods.App.UI.Controls.WorkspaceGrid.PaneView">
-    <Border BorderThickness="1" BorderBrush="White" CornerRadius="16" ClipToBounds="True">
+    <Border BorderThickness="1" Margin="4" BorderBrush="White" CornerRadius="16" ClipToBounds="True">
         <Grid RowDefinitions="32, *" ColumnDefinitions="*">
             <Rectangle Grid.Row="0" Fill="Brown"></Rectangle>
+            <TextBlock Grid.Row="0" x:Name="HeaderTextBlock"></TextBlock>
             <Rectangle Grid.Row="1" Fill="OliveDrab"></Rectangle>
         </Grid>
     </Border>

@@ -6,7 +6,7 @@
                                 xmlns:reactiveUi="http://reactiveui.net"
                                 xmlns:workspaceGrid="clr-namespace:NexusMods.App.UI.Controls.WorkspaceGrid"
                                 xmlns:avalonia="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
-                                mc:Ignorable="d" d:DesignWidth="32" d:DesignHeight="150"
+                                mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="400"
                                 Width="32"
                                 Height="48"
                                 x:Class="NexusMods.App.UI.Controls.WorkspaceGrid.HorizontalSeparatorView">
@@ -17,6 +17,17 @@
         <avalonia:Icon FontSize="16" Foreground="White" Width="32" Height="20" Classes="DragVerticalVariant" 
                        x:Name="MoveIcon"
                        Cursor="SizeWestEast"></avalonia:Icon>
+        <Border.ContextFlyout>
+            <Flyout ShowMode="TransientWithDismissOnPointerMoveAway">
+                <StackPanel Orientation="Vertical">
+                    <Button x:Name="SwapPanelsButton"><TextBlock>Swap Panels</TextBlock></Button>
+                    <Button><TextBlock>Join Left</TextBlock></Button>
+                    <Button><TextBlock>Join Right</TextBlock></Button>
+                    <Button x:Name="SplitLeftButton"><TextBlock>Split Left</TextBlock></Button>
+                    <Button x:Name="SplitRightButton"><TextBlock>Split Right</TextBlock></Button>
+                </StackPanel>
+            </Flyout>
+        </Border.ContextFlyout>
     </Border>
 </reactiveUi:ReactiveUserControl>
 

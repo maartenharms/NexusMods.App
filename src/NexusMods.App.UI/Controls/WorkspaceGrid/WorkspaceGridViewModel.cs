@@ -128,6 +128,14 @@ public class WorkspaceGridViewModel : AViewModel<IWorkspaceGridViewModel>, IWork
         }
     }
 
+    public void Refresh(params IPaneViewModel[] panes)
+    {
+        _panes.Edit(x =>
+        {
+            x.AddOrUpdate(panes);
+        });
+    }
+
     private void UpdatePane(IPaneViewModel pane)
     {
         _panes.Edit(x =>

@@ -42,6 +42,10 @@ public partial class HorizontalSeparatorView : ReactiveUserControl<ISeparatorVie
                 .Subscribe(val => Canvas.SetTop(this, val))
                 .DisposeWith(d);
 
+            SplitLeftButton.Command = ReactiveCommand.Create(() => ViewModel!.SplitA());
+            SplitRightButton.Command = ReactiveCommand.Create(() => ViewModel!.SplitB());
+            SwapPanelsButton.Command = ReactiveCommand.Create(() => ViewModel!.Swap());
+
         });
     }
 

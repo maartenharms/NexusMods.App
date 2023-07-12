@@ -15,5 +15,16 @@
             PointerMoved="MoveIcon_OnPointerMoved"
             PointerReleased="MoveIcon_OnPointerReleased">
         <avalonia:Icon FontSize="16" Foreground="White" Classes="DragHorizontalVariant" x:Name="MoveIcon"></avalonia:Icon>
+        <Border.ContextFlyout>
+            <Flyout ShowMode="TransientWithDismissOnPointerMoveAway">
+                <StackPanel Orientation="Vertical">
+                    <Button x:Name="SwapPanelsButton"><TextBlock>Swap Panels</TextBlock></Button>
+                    <Button x:Name="JoinTopButton"><TextBlock>Join Top</TextBlock></Button>
+                    <Button x:Name="JoinBottomButton"><TextBlock>Join Bottom</TextBlock></Button>
+                    <Button x:Name="SplitTopButton"><TextBlock>Split Top</TextBlock></Button>
+                    <Button x:Name="SplitBottomButton"><TextBlock>Split Bottom</TextBlock></Button>
+                </StackPanel>
+            </Flyout>
+        </Border.ContextFlyout>
     </Border>
 </reactiveUi:ReactiveUserControl>

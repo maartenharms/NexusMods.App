@@ -23,12 +23,15 @@ public partial class VerticalSeparatorView : ReactiveUserControl<ISeparatorViewM
             var panelABounds = this.WhenAnyValue(view => view.ViewModel!.PaneA.ActualBounds);
             var panelBBounds = this.WhenAnyValue(view => view.ViewModel!.PaneB.ActualBounds);
 
-            panelBBounds.Select(view => view.Top - Height / 2)
+            panelBBounds
                 .OnUI()
+                .Select(view => view.Top - Height / 2)
                 .Subscribe(val => Canvas.SetTop(this, val))
                 .DisposeWith(d);
 
-            panelABounds.CombineLatest(panelBBounds)
+            panelABounds
+                .CombineLatest(panelBBounds)
+                .OnUI()
                 .Select(panels =>
                 {
                     var (panelA, panelB) = panels;
@@ -39,8 +42,21 @@ public partial class VerticalSeparatorView : ReactiveUserControl<ISeparatorViewM
                     var top = biggestLeft + ((smallestRight - biggestLeft) / 2) - (Width / 2);
                     return top;
                 })
-                .OnUI()
                 .Subscribe(val => Canvas.SetLeft(this, val))
+                .DisposeWith(d);
+            
+            SplitTopButton.Command = ReactiveCommand.Create(() => ViewModel!.SplitA());
+            SplitBottomButton.Command = ReactiveCommand.Create(() => ViewModel!.SplitB());
+            SwapPanelsButton.Command = ReactiveCommand.Create(() => ViewModel!.Swap());
+            
+            JoinTopButton.Command = ReactiveCommand.Create(() => ViewModel!.JoinAToB(),
+                this.WhenAnyValue(view => view.ViewModel!.CanJoin));
+            
+            JoinBottomButton.Command = ReactiveCommand.Create(() => ViewModel!.JoinBToA(),
+                this.WhenAnyValue(view => view.ViewModel!.CanJoin));
+
+            this.WhenAnyValue(view => view.ViewModel!.Workspace.EditMode)
+                .BindToUi(this, view => view.IsVisible)
                 .DisposeWith(d);
 
         });

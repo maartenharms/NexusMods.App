@@ -57,7 +57,44 @@ public class WorkspaceGridViewTests : AViewTest<WorkspaceGridView, WorkspaceGrid
         
         ViewModel.Panes.First().LogicalBounds.Should().Be(new Rect(0, 0, 0.25, 1));
         ViewModel.Panes.Last().LogicalBounds.Should().Be(new Rect(0.25, 0, 0.75, 1));
+    }
 
+    [Fact]
+    public async Task TwoPanelsBlockJoining()
+    {
+        var ctl = await GetControl<Canvas>("LayoutCanvas");
+        ViewModel.Split(ViewModel.Panes.First(), Direction.Horizontal);
+        
+        var largePanel = ViewModel.Panes
+            .OrderByDescending(p => p.LogicalBounds.Width * p.LogicalBounds.Height)
+            .First();
+        
+        await Eventually(() =>
+        {
+            var handles = ViewModel.Handles.Where(h => h.PaneA == largePanel || h.PaneB == largePanel).ToList();
+            handles.Count.Should().Be(1);
+
+            foreach (var handle in handles)
+            {
+                handle.CanJoin.Should().BeTrue();
+            }
+        });
+
+
+        var otherPanel = ViewModel.Panes.First(p => p != largePanel);
+        ViewModel.Split(otherPanel, Direction.Vertical);
+        
+        await Eventually(() =>
+        {
+            var handles = ViewModel.Handles.Where(h => h.PaneA == largePanel || h.PaneB == largePanel).ToList();
+            handles.Count.Should().Be(2);
+
+            foreach (var handle in handles)
+            {
+                handle.CanJoin.Should().BeFalse();
+            }
+        });
+        
     }
 
 

@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NexusMods.App.UI.Extensions;
 using NexusMods.DataModel.Extensions;
 using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
 
 namespace NexusMods.App.UI.Controls.WorkspaceGrid;
 
@@ -19,7 +20,9 @@ public class WorkspaceGridViewModel : AViewModel<IWorkspaceGridViewModel>, IWork
     
     private ReadOnlyObservableCollection<ISeparatorViewModel> _handlesFiltered = Initializers.ReadOnlyObservableCollection<ISeparatorViewModel>();
     public ReadOnlyObservableCollection<ISeparatorViewModel> Handles => _handlesFiltered;
-
+    
+    [Reactive]
+    public bool EditMode { get; set; }
 
     private static readonly PaneComparer PaneComparer = new();
 
@@ -136,6 +139,26 @@ public class WorkspaceGridViewModel : AViewModel<IWorkspaceGridViewModel>, IWork
         });
     }
 
+    public void Join(IPaneViewModel paneA, IPaneViewModel paneB)
+    {
+        if (paneA.LogicalBounds.Top.EqualsWithTolerance(paneB.LogicalBounds.Top))
+        {
+            var newWidth = paneA.LogicalBounds.Width + paneB.LogicalBounds.Width;
+            paneA.SetLogicalBounds(paneA.LogicalBounds.WithWidth(newWidth)
+                .WithX(Math.Min(paneA.LogicalBounds.X, paneB.LogicalBounds.X)));
+            _panes.Remove(paneB);
+            UpdatePane(paneA);
+        }
+        else if (paneA.LogicalBounds.Left.EqualsWithTolerance(paneB.LogicalBounds.Left))
+        {
+            var newHeight = paneA.LogicalBounds.Height + paneB.LogicalBounds.Height;
+            paneA.SetLogicalBounds(paneA.LogicalBounds.WithHeight(newHeight)
+                .WithY(Math.Min(paneA.LogicalBounds.Y, paneA.LogicalBounds.Y)));
+            _panes.Remove(paneB);
+            UpdatePane(paneA);
+        }
+    }
+
     private void UpdatePane(IPaneViewModel pane)
     {
         _panes.Edit(x =>
@@ -162,7 +185,7 @@ public class WorkspaceGridViewModel : AViewModel<IWorkspaceGridViewModel>, IWork
 
                 // Ignore cases where the panes are not adjacent
 
-                if (!ShareBorder(paneA.LogicalBounds, paneB.LogicalBounds))
+                if (!paneA.LogicalBounds.SharesBorderWith(paneB.LogicalBounds))
                     continue;
 
 
@@ -185,7 +208,7 @@ public class WorkspaceGridViewModel : AViewModel<IWorkspaceGridViewModel>, IWork
                 if (paneA.LogicalBounds.Top > paneB.LogicalBounds.Top)
                     (paneA, paneB) = (paneB, paneA);
                 
-                if (!ShareBorder(paneA.LogicalBounds, paneB.LogicalBounds))
+                if (!paneA.LogicalBounds.SharesBorderWith(paneB.LogicalBounds))
                     continue;
 
                 if ((paneA.LogicalBounds.Top + paneA.LogicalBounds.Height).EqualsWithTolerance(paneB.LogicalBounds.Top))
@@ -196,44 +219,5 @@ public class WorkspaceGridViewModel : AViewModel<IWorkspaceGridViewModel>, IWork
         }
     }
     
-    /// <summary>
-    /// Returns true if the two panes share a border.
-    /// </summary>
-    /// <param name="a"></param>
-    /// <param name="b"></param>
-    /// <returns></returns>
-    private bool ShareBorder(Rect a, Rect b)
-    {
-        var aRight = a.Left + a.Width;
-        var bRight = b.Left + b.Width;
-        var aBottom = a.Top + a.Height;
-        var bBottom = b.Top + b.Height;
-        
-        // Check for a shared border
-        if (aRight.EqualsWithTolerance(b.Left) || bRight.EqualsWithTolerance(a.Left))
-        {
-            // Check for overlapping borders
-            if (LinesOverlap(a.Top, aBottom, b.Top, bBottom))
-            {
-                return true;
-            }
-        }
-        
-        // Check for horizontal borders
-        if (aBottom.EqualsWithTolerance(b.Top) || bBottom.EqualsWithTolerance(a.Top))
-        {
-            // Check for vertical overlap
-            if (LinesOverlap(a.Left, aRight, b.Left, bRight))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-    
-    private bool LinesOverlap(double a1, double a2, double b1, double b2)
-    {
-        return Math.Min(a1, a2) < Math.Max(b1, b2) && Math.Max(a1, a2) > Math.Min(b1, b2);
-    }
+  
 }

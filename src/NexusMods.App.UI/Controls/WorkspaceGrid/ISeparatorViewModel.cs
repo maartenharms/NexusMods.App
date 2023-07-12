@@ -6,6 +6,13 @@ public interface ISeparatorViewModel : IViewModelInterface
     public IPaneViewModel PaneB { get; }
     public Direction Direction { get; }
     
+    /// <summary>
+    /// True if panes can be joined, in either direction
+    /// </summary>
+    public bool CanJoin { get; }
+
+    public IWorkspaceGridViewModel Workspace { get; }
+    
     public (PaneId, PaneId, Direction) Id => (PaneA.Id, PaneB.Id, Direction);
     
     /// <summary>
@@ -28,4 +35,14 @@ public interface ISeparatorViewModel : IViewModelInterface
     /// Swap the A and B panes
     /// </summary>
     void Swap();
+    
+    /// <summary>
+    /// Deletes A and expands B to take its place
+    /// </summary>
+    void JoinAToB();
+    
+    /// <summary>
+    /// Deletes B and expands A to take its place
+    /// </summary>
+    void JoinBToA();
 }

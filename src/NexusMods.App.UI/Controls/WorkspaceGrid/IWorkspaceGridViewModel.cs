@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using Avalonia;
+using ReactiveUI.Fody.Helpers;
 
 namespace NexusMods.App.UI.Controls.WorkspaceGrid;
 
@@ -7,6 +8,8 @@ public interface IWorkspaceGridViewModel : IViewModelInterface
 {
     ReadOnlyObservableCollection<IPaneViewModel> Panes { get; }
     ReadOnlyObservableCollection<ISeparatorViewModel> Handles { get; }
+    
+    public bool EditMode { get; set; }
     
     void AddPane(IPaneViewModel pane);
     
@@ -31,4 +34,11 @@ public interface IWorkspaceGridViewModel : IViewModelInterface
     /// </summary>
     /// <param name="panes"></param>
     void Refresh(params IPaneViewModel[] panes);
+
+    /// <summary>
+    /// Deletes paneB, and expands paneA to take its place
+    /// </summary>
+    /// <param name="paneA"></param>
+    /// <param name="paneB"></param>
+    void Join(IPaneViewModel paneA, IPaneViewModel paneB);
 }

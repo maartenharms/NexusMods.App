@@ -21,8 +21,8 @@
             <Flyout ShowMode="TransientWithDismissOnPointerMoveAway">
                 <StackPanel Orientation="Vertical">
                     <Button x:Name="SwapPanelsButton"><TextBlock>Swap Panels</TextBlock></Button>
-                    <Button><TextBlock>Join Left</TextBlock></Button>
-                    <Button><TextBlock>Join Right</TextBlock></Button>
+                    <Button x:Name="JoinLeftButton"><TextBlock>Join Left</TextBlock></Button>
+                    <Button x:Name="JoinRightButton"><TextBlock>Join Right</TextBlock></Button>
                     <Button x:Name="SplitLeftButton"><TextBlock>Split Left</TextBlock></Button>
                     <Button x:Name="SplitRightButton"><TextBlock>Split Right</TextBlock></Button>
                 </StackPanel>

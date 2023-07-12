@@ -1,4 +1,10 @@
-﻿using NexusMods.App.UI.Extensions;
+﻿using System.Reactive.Disposables;
+using System.Reactive.Linq;
+using DynamicData;
+using DynamicData.Binding;
+using NexusMods.App.UI.Extensions;
+using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
 
 namespace NexusMods.App.UI.Controls.WorkspaceGrid;
 
@@ -8,7 +14,56 @@ public class SeparatorViewModel : AViewModel<ISeparatorViewModel>, ISeparatorVie
     public required IPaneViewModel PaneB { get; init; }
     public required Direction Direction { get; init; }
     
+    [Reactive]
+    public bool CanJoin { get; set; }
     public required IWorkspaceGridViewModel Workspace { get; init; }
+
+    public SeparatorViewModel()
+    {
+        this.WhenActivated(d =>
+        {
+            var panes = Workspace!.Panes
+                .ToObservableChangeSet()
+                .QueryWhenChanged(panes => panes);
+            if (Direction == Direction.Horizontal)
+            {
+                
+                panes.CombineLatest(this.WhenAnyValue(vm => vm.PaneA.LogicalBounds),
+                        this.WhenAnyValue(vm => vm.PaneB.LogicalBounds))
+                    .Select(itms =>
+                    {
+                        var (panes, paneA, paneB) = itms;
+                        var seam = paneB.Top;
+                        var aBottomPanes = panes.Where(pane => pane.LogicalBounds.Top.EqualsWithTolerance(seam) && paneA.SharesBorderWith(pane.LogicalBounds));
+                        var aTopPanes = panes.Where(pane => pane.LogicalBounds.Bottom.EqualsWithTolerance(seam) && paneB.SharesBorderWith(pane.LogicalBounds));
+                        foreach (var tp in aTopPanes)
+                        {
+                            Console.WriteLine("Top Pane Size: {0} = {1}", tp.LogicalBounds, paneB);
+                            
+                        }
+                        Console.WriteLine("Hor Split Count {0} {1}", aBottomPanes.Count(), aTopPanes.Count());
+                        return  aBottomPanes.Count() == 1 && aTopPanes.Count() == 1;
+                    })
+                    .BindToUi(this, vm => vm.CanJoin)
+                    .DisposeWith(d);
+            }
+            else
+            {
+                panes.CombineLatest(this.WhenAnyValue(vm => vm.PaneA.LogicalBounds),
+                        this.WhenAnyValue(vm => vm.PaneB.LogicalBounds))
+                    .Select(itms =>
+                    {
+                        var (panes, paneA, paneB) = itms;
+                        var aRightPanes = panes.Where(pane => pane.LogicalBounds.Left.EqualsWithTolerance(paneA.Right) && paneA.SharesBorderWith(pane.LogicalBounds));
+                        var bLeftPanes = panes.Where(pane => pane.LogicalBounds.Right.EqualsWithTolerance(paneB.Left) && paneB.SharesBorderWith(pane.LogicalBounds));
+                        Console.WriteLine("Ver Split Count {0} {1}", aRightPanes.Count(), bLeftPanes.Count());
+                        return  aRightPanes.Count() == 1 && bLeftPanes.Count() == 1;
+                    })
+                    .BindToUi(this, vm => vm.CanJoin)
+                    .DisposeWith(d);
+            }
+        });
+    }
     
     public void Move(double delta)
     {
@@ -70,5 +125,18 @@ public class SeparatorViewModel : AViewModel<ISeparatorViewModel>, ISeparatorVie
         PaneA.SetLogicalBounds(PaneB.LogicalBounds);
         PaneB.SetLogicalBounds(tmpLoc);
         Workspace.Refresh(PaneA, PaneB);
+    }
+
+    public void JoinAToB()
+    {
+        if (!CanJoin) return;
+        
+        Workspace.Join(PaneA, PaneB);
+    }
+
+    public void JoinBToA()
+    {
+        if (!CanJoin) return;
+        Workspace.Join(PaneB, PaneA);
     }
 }

@@ -45,6 +45,16 @@ public partial class HorizontalSeparatorView : ReactiveUserControl<ISeparatorVie
             SplitLeftButton.Command = ReactiveCommand.Create(() => ViewModel!.SplitA());
             SplitRightButton.Command = ReactiveCommand.Create(() => ViewModel!.SplitB());
             SwapPanelsButton.Command = ReactiveCommand.Create(() => ViewModel!.Swap());
+            
+            JoinRightButton.Command = ReactiveCommand.Create(() => ViewModel!.JoinAToB(),
+                this.WhenAnyValue(view => view.ViewModel!.CanJoin));
+            
+            JoinLeftButton.Command = ReactiveCommand.Create(() => ViewModel!.JoinBToA(),
+                this.WhenAnyValue(view => view.ViewModel!.CanJoin));
+
+            this.WhenAnyValue(view => view.ViewModel!.Workspace.EditMode)
+                .BindToUi(this, view => view.IsVisible)
+                .DisposeWith(d);
 
         });
     }

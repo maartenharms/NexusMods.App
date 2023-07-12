@@ -205,6 +205,15 @@
         <Compile Update="Controls\Spine\Buttons\Download\DownloadButtonViewModel.cs">
           <DependentUpon>IDownloadButtonViewModel.cs</DependentUpon>
         </Compile>
+        <Compile Update="Controls\WorkspaceGrid\PaneViewModel.cs">
+          <DependentUpon>IPaneViewModel.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Controls\WorkspaceGrid\WorkspaceGridViewModel.cs">
+          <DependentUpon>IWorkspaceGridViewModel.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Controls\WorkspaceGrid\SeparatorViewModel.cs">
+          <DependentUpon>ISeparatorViewModel.cs</DependentUpon>
+        </Compile>
     </ItemGroup>
 
     <ItemGroup>

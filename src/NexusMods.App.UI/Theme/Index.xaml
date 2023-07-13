@@ -15,5 +15,6 @@
     <StyleInclude Source="avares://NexusMods.App.UI/Theme/ToggleSwitchStyles.xaml" />
     <StyleInclude Source="avares://NexusMods.App.UI/Theme/Toolbar.xaml" />
     <StyleInclude Source="avares://NexusMods.App.UI/Theme/WindowStyles.xaml" />
+    <StyleInclude Source="avares://NexusMods.App.UI/Theme/Workspace/Index.xaml" />
 
 </Styles>

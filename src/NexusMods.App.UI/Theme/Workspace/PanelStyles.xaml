@@ -1,0 +1,38 @@
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia">
+
+    <Design.PreviewWith>
+        <Grid RowDefinitions="52, *" Classes="WorkspacePanel" Width="800" Height="600">
+            <Border Classes="Header" Grid.Row="0">
+                <StackPanel>
+                    <avalonia:Icon Classes="Cog"/> 
+                    <TextBlock Classes="Title" Text="DIAGNOSTICS"></TextBlock>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Design.PreviewWith>
+    
+    <Style Selector="Grid.WorkspacePanel Border.Header">
+        <Setter Property="CornerRadius" Value="8, 8, 0, 0"></Setter>
+        <Setter Property="BorderThickness" Value="0, 0, 0, 1"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource StructuralBorderBrush}"></Setter>
+        <Setter Property="Background" Value="{DynamicResource BackgroundSecondaryBrush}"></Setter>
+    </Style>
+    
+    <Style Selector="Grid.WorkspacePanel Border.Header StackPanel">
+        <Setter Property="Margin" Value="24, 8"></Setter>
+        <Setter Property="Orientation" Value="Horizontal"></Setter>
+        <Setter Property="Spacing" Value="8"></Setter>
+    </Style>
+    
+    <Style Selector="Grid.WorkspacePanel Border.Header StackPanel TextBlock.Title">
+        <Setter Property="FontFamily" Value="{DynamicResource FontPrimarySemiBold}"></Setter>
+        <Setter Property="FontWeight" Value="600"></Setter>
+        <Setter Property="FontSize" Value="14"></Setter>
+        <Setter Property="LineHeight" Value="24.76"></Setter>
+        <Setter Property="Foreground" Value="{DynamicResource FontDarkPrimary}"></Setter>
+    </Style>
+
+</Styles>

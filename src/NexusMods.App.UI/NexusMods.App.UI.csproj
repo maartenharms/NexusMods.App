@@ -71,6 +71,10 @@
         <AvaloniaResource Include="Theme\ProgressBar.xaml" />
         <None Remove="Theme\ButtonStyles\Spine\DownloadButton.xaml" />
         <AvaloniaResource Include="Theme\ButtonStyles\Spine\DownloadButton.xaml" />
+        <None Remove="Theme\Workspace\PanelStyles.xaml" />
+        <AvaloniaResource Include="Theme\Workspace\PanelStyles.xaml" />
+        <None Remove="Theme\Workspace\Index.xaml" />
+        <AvaloniaResource Include="Theme\Workspace\Index.xaml" />
     </ItemGroup>
 
     <ItemGroup>

@@ -1,4 +1,5 @@
 ﻿using Avalonia;
+using NexusMods.App.UI.Controls.WorkspaceGrid.PaneDefinitions;
 
 namespace NexusMods.App.UI.Controls.WorkspaceGrid;
 
@@ -60,4 +61,9 @@ public interface IPaneViewModel : IViewModelInterface
     /// </summary>
     /// <returns></returns>
     IPaneViewModel Clone();
+    
+    /// <summary>
+    /// The content of the pane
+    /// </summary>
+    public IPaneContentViewModel? Content { get; set; }
 }

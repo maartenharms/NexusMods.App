@@ -35,10 +35,7 @@ public partial class PaneView : ReactiveUserControl<IPaneViewModel>
                 .OnUI()
                 .Subscribe(val => Canvas.SetTop(this, val))
                 .DisposeWith(d);
-
-            this.WhenAnyValue(view => view.ViewModel!.Id)
-                .BindToUi(this, view => view.HeaderTextBlock.Text)
-                .DisposeWith(d);
+            
             
         });
     }

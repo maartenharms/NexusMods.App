@@ -1,6 +1,7 @@
 ﻿using System.Reactive.Subjects;
 using Avalonia;
 using Microsoft.Extensions.DependencyInjection;
+using NexusMods.App.UI.Controls.WorkspaceGrid.PaneDefinitions;
 using NexusMods.App.UI.Extensions;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -20,6 +21,10 @@ public class PaneViewModel : AViewModel<IPaneViewModel>, IPaneViewModel
     
     [Reactive]
     public Rect ActualBounds { get; private set; }
+    
+    
+    [Reactive]
+    public IPaneContentViewModel? Content { get; set; }
 
     public PaneViewModel(IServiceProvider provider)
     {

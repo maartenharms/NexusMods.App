@@ -163,7 +163,7 @@ public class IngestChangesTest : ALoadoutSynrchonizerTest<IngestChangesTest>
         var newData = new TestGeneratedFile
         {
             Id = ModFileId.New(),
-            Ids = new[] { Guid.NewGuid(), Guid.NewGuid() },
+            Ids = new[] { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()},
             To = new GamePath(GameFolderType.Game, "foo.bar")
         };
 
@@ -186,6 +186,17 @@ public class IngestChangesTest : ALoadoutSynrchonizerTest<IngestChangesTest>
             .Order()
             .Should()
             .BeEquivalentTo(newData.Ids.Order(), "the generated file should have been created with the correct contents");
+
+        
+        lines = lines.Skip(1).Take(1).ToArray();
+
+        await fileLocation.WriteAllLinesAsync(lines.Select(l => l.ToString()));
+        
+        var ingestPlan = await LoadoutSynchronizer.MakeIngestPlan(loadout, _ => firstMod.Id);
+        await LoadoutSynchronizer.Ingest(ingestPlan);
+        
+        
+
 
 
     }

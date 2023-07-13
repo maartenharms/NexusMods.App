@@ -1,10 +1,13 @@
-﻿using FluentAssertions;
+﻿using System.Runtime.CompilerServices;
+using FluentAssertions;
+using NexusMods.DataModel.JsonConverters;
 using NexusMods.DataModel.Loadouts;
 using NexusMods.DataModel.Loadouts.IngestSteps;
 using NexusMods.DataModel.Loadouts.LoadoutSynchronizerDTOs;
 using NexusMods.DataModel.Loadouts.ModFiles;
 using NexusMods.DataModel.Loadouts.Mods;
 using NexusMods.DataModel.Tests.Harness;
+using NexusMods.DataModel.TriggerFilter;
 using NexusMods.Hashing.xxHash64;
 using NexusMods.Paths;
 
@@ -149,5 +152,71 @@ public class IngestChangesTest : ALoadoutSynrchonizerTest<IngestChangesTest>
             .OfType<FromArchive>().First(f => f.To == gamePath);
         file.Hash.Should().Be(Hash.From(0x42DEADBEEF));
         file.Size.Should().Be(Size.MB);
+    }
+
+    [Fact]
+    public async Task ChangesToGeneratedFilesAreIngested()
+    {
+        var loadout = await CreateApplyPlanTestLoadout();
+        var firstMod = loadout.Mods.Values.First();
+
+        var newData = new TestGeneratedFile
+        {
+            Id = ModFileId.New(),
+            Ids = new[] { Guid.NewGuid(), Guid.NewGuid() },
+            To = new GamePath(GameFolderType.Game, "foo.bar")
+        };
+
+        LoadoutRegistry.Alter(loadout.LoadoutId, firstMod.Id, "Add Generated File", mod =>
+        {
+            return mod with
+            {
+                Files = mod.Files.With(newData, i => i.Id)
+            };
+        });
+
+        loadout = LoadoutRegistry.Get(loadout.LoadoutId);
+        var plan = await LoadoutSynchronizer.MakeApplySteps(loadout);
+        await LoadoutSynchronizer.Apply(plan);
+
+        var fileLocation = loadout.Installation.Locations[GameFolderType.Game].Combine("foo.bar");
+        var lines = (await fileLocation.ReadAllTextAsync()).Split(new [] {'\r', '\n'}, StringSplitOptions.RemoveEmptyEntries);
+        
+        lines.Select(Guid.Parse)
+            .Order()
+            .Should()
+            .BeEquivalentTo(newData.Ids.Order(), "the generated file should have been created with the correct contents");
+
+
+    }
+    
+    [JsonName("TestGeneratedFileOfGuids")]
+    
+    public record TestGeneratedFile : AModFile, IGeneratedFile, IToFile, ITriggerFilter<ModFilePair, Plan>
+    {
+        
+        public required Guid[] Ids { get; init; }
+        public ITriggerFilter<ModFilePair, Plan> TriggerFilter => this;
+
+        public async Task<Hash> GenerateAsync(Stream stream, ApplyPlan plan, CancellationToken cancellationToken = default)
+        {
+            var ms = new MemoryStream();
+            await ms.WriteAllLinesAsync(Ids.Select(s => s.ToString()), token: cancellationToken);
+            
+            ms.Position = 0;
+            return await ms.HashingCopyAsync(stream, token: cancellationToken);
+        }
+
+        public required GamePath To { get; init; }
+        public Hash GetFingerprint(ModFilePair self, Plan input)
+        {
+            using var cache = Fingerprinter.Create();
+            foreach (var id in Ids.Order())
+            {
+                cache.Add(id.ToString());
+            }
+
+            return cache.Digest();
+        }
     }
 }

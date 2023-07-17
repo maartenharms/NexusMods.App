@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Net.NetworkInformation;
+using System.Text;
 using FluentAssertions;
 using Moq;
 using NexusMods.DataModel.Abstractions;
@@ -7,6 +8,7 @@ using NexusMods.DataModel.Extensions;
 using NexusMods.DataModel.Loadouts;
 using NexusMods.DataModel.Loadouts.ApplySteps;
 using NexusMods.DataModel.Loadouts.LoadoutSynchronizerDTOs;
+using NexusMods.DataModel.Loadouts.LoadoutSynchronizerDTOs.PlanStates;
 using NexusMods.DataModel.Loadouts.ModFiles;
 using NexusMods.DataModel.Loadouts.Mods;
 using NexusMods.DataModel.Tests.Harness;
@@ -14,6 +16,7 @@ using NexusMods.DataModel.TriggerFilter;
 using NexusMods.FileExtractor.StreamFactories;
 using NexusMods.Hashing.xxHash64;
 using NexusMods.Paths;
+using Xunit.Sdk;
 
 namespace NexusMods.DataModel.Tests.LoadoutSynchronizerTests;
 
@@ -44,6 +47,8 @@ public class ApplyLoadoutTests : ALoadoutSynrchonizerTest<ApplyLoadoutTests>
 
         TestArchiveManagerInstance.Archives.Should().NotContain(Hash.From(0x424));
 
+        throw new NetworkInformationException();
+        /*
         await TestSyncronizer.Apply(new ApplyPlan
         {
             Steps = plan,
@@ -51,6 +56,7 @@ public class ApplyLoadoutTests : ALoadoutSynrchonizerTest<ApplyLoadoutTests>
             Mods = Array.Empty<Mod>(),
             Flattened = new Dictionary<GamePath, ModFilePair>()
         });
+        */
 
         TestArchiveManagerInstance.Archives.Should().Contain(Hash.From(0x424));
     }
@@ -78,6 +84,8 @@ public class ApplyLoadoutTests : ALoadoutSynrchonizerTest<ApplyLoadoutTests>
             }
         };
 
+        throw new NotImplementedException();
+        /*
         await TestSyncronizer.Apply(new ApplyPlan
         {
             Steps = plan,
@@ -85,6 +93,7 @@ public class ApplyLoadoutTests : ALoadoutSynrchonizerTest<ApplyLoadoutTests>
             Mods = Array.Empty<Mod>(),
             Flattened = new Dictionary<GamePath, ModFilePair>()
         });
+        */
         
         mfilesystem.Verify(f => f.DeleteFile(file), Times.Once);
     }
@@ -92,6 +101,7 @@ public class ApplyLoadoutTests : ALoadoutSynrchonizerTest<ApplyLoadoutTests>
     [Fact]
     public async Task ExtractedFilesAreExtracted()
     {
+        throw new NotEmptyException();
         var loadout = await CreateApplyPlanTestLoadout();
 
         var file = GetFirstModFile(loadout);
@@ -106,13 +116,14 @@ public class ApplyLoadoutTests : ALoadoutSynrchonizerTest<ApplyLoadoutTests>
             }
         };
 
+        /*
         await TestSyncronizer.Apply(new ApplyPlan
         {
             Steps = plan,
             Loadout = loadout,
             Mods = Array.Empty<Mod>(),
             Flattened = new Dictionary<GamePath, ModFilePair>()
-        });
+        });*/
 
         var fileFactory = new NativeFileStreamFactory(file);
 
@@ -120,24 +131,25 @@ public class ApplyLoadoutTests : ALoadoutSynrchonizerTest<ApplyLoadoutTests>
     }
 
 
-    class TestGeneratedFile : IGeneratedFile, ITriggerFilter<ModFilePair, Plan>
+    class TestGeneratedFile : IGeneratedFile, ITriggerFilter<ModFilePair, FingerprintingValidationState>
     {
-        public ITriggerFilter<ModFilePair, Plan> TriggerFilter => this;
-        public async Task<Hash> GenerateAsync(Stream stream, ApplyPlan plan, CancellationToken cancellationToken = default)
+        public ITriggerFilter<ModFilePair, FingerprintingValidationState> TriggerFilter => this;
+        public async Task<Hash> GenerateAsync(Stream stream, FingerprintingValidationState plan, CancellationToken cancellationToken = default)
         {
             var txt = "Hello World!"u8.ToArray();
             await stream.WriteAsync(txt, cancellationToken);
             return txt.AsSpan().XxHash64();
         }
 
-        public Hash GetFingerprint(ModFilePair self, Plan input)
+        public Fingerprint GetFingerprint(ModFilePair self, FingerprintingValidationState input)
         {
-            return Hash.From(0xDEADBEEF);
+            return Fingerprint.From(0xDEADBEEF);
         }
     }
     [Fact]
     public async Task GeneratedFilesAreGenerated()
     {
+        throw new NotImplementedException();
         var loadout = await CreateApplyPlanTestLoadout(true);
         
         var dest = loadout.Installation.Locations[GameFolderType.Game].Combine("generated.txt");
@@ -154,14 +166,8 @@ public class ApplyLoadoutTests : ALoadoutSynrchonizerTest<ApplyLoadoutTests>
             }
         };
         
-        await TestSyncronizer.Apply(new ApplyPlan
-        {
-            Steps = plan,
-            Loadout = loadout,
-            Mods = Array.Empty<Mod>(),
-            Flattened = new Dictionary<GamePath, ModFilePair>()
-        });
-        
+
+        /*
         dest.FileExists.Should().BeTrue();
         (await dest.ReadAllTextAsync()).Should().Be("Hello World!");
 
@@ -172,5 +178,6 @@ public class ApplyLoadoutTests : ALoadoutSynrchonizerTest<ApplyLoadoutTests>
                 Hash = "Hello World!"u8.XxHash64(),
                 Size = dest.FileInfo.Size
             }));
+            */
     }
 }

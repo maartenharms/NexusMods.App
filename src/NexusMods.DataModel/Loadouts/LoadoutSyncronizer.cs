@@ -152,7 +152,7 @@ public class LoadoutSynchronizer
     /// <param name="loadout"></param>
     /// <param name="token"></param>
     /// <returns></returns>
-    public async ValueTask<AValidationResult> Validate(Loadout loadout, CancellationToken token)
+    public async ValueTask<AValidationResult> Validate(Loadout loadout, CancellationToken token = default)
     {
         return await Validate(new BaseConfiguration
         {

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using NexusMods.DataModel.Abstractions;
 using NexusMods.DataModel.Games;
 using NexusMods.DataModel.Loadouts;
+using NexusMods.DataModel.Loadouts.LoadoutSynchronizerDTOs.PlanStates;
 using NexusMods.DataModel.Loadouts.Markers;
 using NexusMods.Hashing.xxHash64;
 using NexusMods.Paths;
@@ -98,6 +99,20 @@ public abstract class ADataModelTest<T> : IDisposable, IAsyncLifetime
     {
         var hash1 = await ArchiveAnalyzer.AnalyzeFileAsync(path, CancellationToken.None);
         return await ArchiveInstaller.AddMods(mainList.Value.LoadoutId, hash1.Hash, name, CancellationToken.None);
+    }
+    
+    /// <summary>
+    /// Performs a validation on the given loadout and throws an exception if it fails
+    /// </summary>
+    /// <param name="loadout"></param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
+    protected virtual async ValueTask<SuccessfulValidationResult> ValidateSuccess(Loadout loadout)
+    {
+        var validation = await LoadoutSynchronizer.Validate(loadout, Token);
+        if (validation is IFailedValidation failedValidation)
+            throw new Exception("Validation failed with message: " + failedValidation.Message);
+        return (SuccessfulValidationResult)validation;
     }
 
     public Task DisposeAsync()

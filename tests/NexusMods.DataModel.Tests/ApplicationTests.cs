@@ -27,8 +27,8 @@ public class ApplicationTests : ADataModelTest<ApplicationTests>
         var hash = await ArchiveAnalyzer.AnalyzeFileAsync(DataZipLzma, CancellationToken.None);
         await ArchiveInstaller.AddMods(mainList.Value.LoadoutId, hash.Hash, "First Mod", CancellationToken.None);
 
-        var plan = await LoadoutSynchronizer.MakeApplySteps(mainList.Value, CancellationToken.None);
-        plan.Steps.OfType<ExtractFile>().Count().Should().Be(3);
+        var plan = await ValidateSuccess(mainList.Value);
+        plan.ToExtract.Count.Should().Be(3);
 
         await LoadoutSynchronizer.Apply(plan, CancellationToken.None);
         
@@ -38,8 +38,8 @@ public class ApplicationTests : ADataModelTest<ApplicationTests>
             gameFolder.Combine(file).FileExists.Should().BeTrue("File has been applied");
         }
 
-        var newPlan = await LoadoutSynchronizer.MakeApplySteps(mainList.Value, CancellationToken.None);
-        newPlan.Steps.Count().Should().Be(0);
+        var newPlan = await ValidateSuccess(mainList.Value);
+        newPlan.ToExtract.Count().Should().Be(0);
     }
 
     [Fact]
@@ -50,8 +50,8 @@ public class ApplicationTests : ADataModelTest<ApplicationTests>
         await AddMods(mainList, Data7ZLzma2, "Second Mod");
 
 
-        var originalPlan = await LoadoutSynchronizer.MakeApplySteps(mainList.Value, Token);
-        originalPlan.Steps.OfType<ExtractFile>().Count().Should().Be(3, "Files override each other");
+        var originalPlan = await ValidateSuccess(mainList.Value);
+        originalPlan.ToExtract.Count().Should().Be(3, "Files override each other");
         
         await LoadoutSynchronizer.Apply(originalPlan, Token);
         

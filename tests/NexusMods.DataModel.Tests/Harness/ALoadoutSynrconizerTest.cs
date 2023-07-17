@@ -9,6 +9,7 @@ using NexusMods.DataModel.Abstractions.Ids;
 using NexusMods.DataModel.JsonConverters;
 using NexusMods.DataModel.Loadouts;
 using NexusMods.DataModel.Loadouts.LoadoutSynchronizerDTOs;
+using NexusMods.DataModel.Loadouts.LoadoutSynchronizerDTOs.PlanStates;
 using NexusMods.DataModel.Loadouts.Markers;
 using NexusMods.DataModel.Loadouts.ModFiles;
 using NexusMods.DataModel.Loadouts.Mods;
@@ -107,6 +108,20 @@ public class ALoadoutSynrchonizerTest<T> : ADataModelTest<T>
             }
         }
     }
+    
+    /// <summary>
+    /// Performs a validation on the given loadout and throws an exception if it fails
+    /// </summary>
+    /// <param name="loadout"></param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
+    protected override async ValueTask<SuccessfulValidationResult> ValidateSuccess(Loadout loadout)
+    {
+        var validation = await TestSyncronizer.Validate(loadout, Token);
+        if (validation is IFailedValidation failedValidation)
+            throw new Exception("Validation failed with message: " + failedValidation.Message);
+        return (SuccessfulValidationResult)validation;
+    }
 
     protected async Task<Loadout> CreateApplyPlanTestLoadout(bool generatedFile = false)
     {
@@ -179,17 +194,17 @@ public class ALoadoutSynrchonizerTest<T> : ADataModelTest<T>
 
     public class TestFingerprintCache<TSrc, TValue> : IFingerprintCache<TSrc, TValue> where TValue : Entity
     {
-        public readonly Dictionary<Hash, TValue> Dict = new();
-        public readonly Dictionary<Hash, int> GetCount = new();
-        public readonly Dictionary<Hash, int> SetCount = new();
+        public readonly Dictionary<Fingerprint, TValue> Dict = new();
+        public readonly Dictionary<Fingerprint, int> GetCount = new();
+        public readonly Dictionary<Fingerprint, int> SetCount = new();
 
-        public bool TryGet(Hash hash, out TValue value)
+        public bool TryGet(Fingerprint hash, out TValue value)
         {
             GetCount[hash] = GetCount.GetValueOrDefault(hash, 0) + 1;
             return Dict.TryGetValue(hash, out value!);
         }
 
-        public void Set(Hash hash, TValue value)
+        public void Set(Fingerprint hash, TValue value)
         {
             value.DataStoreId = new Id64(EntityCategory.Fingerprints, hash.Value);
             Dict[hash] = value;
@@ -199,16 +214,16 @@ public class ALoadoutSynrchonizerTest<T> : ADataModelTest<T>
 }
 
 [JsonName("TestGeneratedFile")]
-public record TestGeneratedFile : AModFile, IGeneratedFile, IToFile, ITriggerFilter<ModFilePair, Plan>
+public record TestGeneratedFile : AModFile, IGeneratedFile, IToFile, ITriggerFilter<ModFilePair, FingerprintingValidationState>
 {
-    public ITriggerFilter<ModFilePair, Plan> TriggerFilter => this;
-    public Task<Hash> GenerateAsync(Stream stream, ApplyPlan loadout, CancellationToken cancellationToken = default)
+    public ITriggerFilter<ModFilePair, FingerprintingValidationState> TriggerFilter => this;
+    public Task<Hash> GenerateAsync(Stream stream, FingerprintingValidationState loadout, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
     }
 
     public required GamePath To { get; init; }
-    public Hash GetFingerprint(ModFilePair self, Plan plan)
+    public Fingerprint GetFingerprint(ModFilePair self, FingerprintingValidationState plan)
     {
         using var printer = Fingerprinter.Create();
         foreach (var mod in plan.Loadout.Mods)
@@ -246,7 +261,7 @@ public class AlphabeticalSort : IGeneratedSortRule, ISortRule<Mod, ModId>, ITrig
         }
     }
 
-    public Hash GetFingerprint(ModId self, Loadout loadout)
+    public Fingerprint GetFingerprint(ModId self, Loadout loadout)
     {
         using var fp = Fingerprinter.Create();
         fp.Add(loadout.Mods[self].DataStoreId);

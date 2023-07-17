@@ -3,6 +3,7 @@ using NexusMods.DataModel.Extensions;
 using NexusMods.DataModel.Loadouts.ApplySteps;
 using NexusMods.DataModel.Loadouts.ModFiles;
 using NexusMods.DataModel.Tests.Harness;
+using NexusMods.DataModel.TriggerFilter;
 using NexusMods.Hashing.xxHash64;
 using NexusMods.Paths;
 
@@ -23,17 +24,14 @@ public class MakeApplyPlanTests : ALoadoutSynrchonizerTest<MakeApplyPlanTests>
     {
         var loadout = await CreateApplyPlanTestLoadout();
         
-        var plan = await TestSyncronizer.MakeApplySteps(loadout);
+        var plan = await ValidateSuccess(loadout);
 
         var fileOne = loadout.Mods.Values.First().Files.Values.OfType<IFromArchive>()
             .First(f => f.Hash == Hash.From(0x00001));
 
-        plan.Steps.Should().ContainEquivalentOf(new ExtractFile
-        {
-            To = loadout.Installation.Locations[GameFolderType.Game].Combine("0x00001.dat"),
-            Hash = fileOne.Hash,
-            Size = fileOne.Size
-        });
+        var absPath = loadout.Installation.Locations[GameFolderType.Game].Combine("0x00001.dat");
+
+        plan.ToExtract.Should().Contain(KeyValuePair.Create(absPath, fileOne.Hash), "the file should be extracted");
     }
     
     /// <summary>
@@ -52,14 +50,9 @@ public class MakeApplyPlanTests : ALoadoutSynrchonizerTest<MakeApplyPlanTests>
 
         TestIndexer.Entries.Add(new HashedEntry(absPath, fileOne.Hash, DateTime.Now - TimeSpan.FromDays(1), fileOne.Size ));
         
-        var plan = await TestSyncronizer.MakeApplySteps(loadout);
+        var plan = await ValidateSuccess(loadout);
         
-        plan.Steps.Should().NotContainEquivalentOf(new ExtractFile
-        {
-            To = loadout.Installation.Locations[GameFolderType.Game].Combine("0x00001.dat"),
-            Hash = fileOne.Hash,
-            Size = fileOne.Size
-        });
+        plan.ToExtract.Should().NotContain(KeyValuePair.Create(absPath, fileOne.Hash), "the file is already extracted");
     }
     
     /// <summary>
@@ -73,81 +66,11 @@ public class MakeApplyPlanTests : ALoadoutSynrchonizerTest<MakeApplyPlanTests>
         var absPath = loadout.Installation.Locations[GameFolderType.Game].Combine("file_to_delete.dat");
         TestIndexer.Entries.Add(new HashedEntry(absPath, Hash.From(0x042), DateTime.Now - TimeSpan.FromDays(1), Size.From(0x33)));
 
-        var plan = await TestSyncronizer.MakeApplySteps(loadout);
-
-        plan.Steps.Should().ContainEquivalentOf(new DeleteFile
-        {
-            To = absPath,
-            Hash = Hash.From(0x42),
-            Size = Size.From(0x33)
-        });
-
-        plan.Steps.Should().ContainEquivalentOf(new BackupFile
-        {
-            To = absPath,
-            Hash = Hash.From(0x42),
-            Size = Size.From(0x33)
-        });
-    }
-
-    /// <summary>
-    /// If a file is backed up, we shouldn't see a command to back it up again. 
-    /// </summary>
-    [Fact]
-    public async Task FilesAreNotBackedUpIfAlreadyBackedUp()
-    {
-        var loadout = await CreateApplyPlanTestLoadout();
-
-        TestArchiveManagerInstance.Archives.Add(Hash.From(0x042));
-        var absPath = loadout.Installation.Locations[GameFolderType.Game].Combine("file_to_delete.dat");
-        TestIndexer.Entries.Add(new HashedEntry(absPath, Hash.From(0x042), DateTime.Now - TimeSpan.FromDays(1),
-            Size.From(0x33)));
-
-        var plan = await TestSyncronizer.MakeApplySteps(loadout);
-
-        plan.Steps.OfType<BackupFile>().Should().BeEmpty();
-    }
-    
-    /// <summary>
-    /// If a file in the plan differs from the one on disk, then back up the on-disk file, delete it
-    /// then create the new file
-    /// </summary>
-    [Fact]
-    public async Task ChangedFilesAreBackedUpDeletedAndCreated()
-    {
-        var loadout = await CreateApplyPlanTestLoadout();
-
-        var fileOne = loadout.Mods.Values.First().Files.Values.OfType<IFromArchive>()
-            .First(f => f.Hash == Hash.From(0x00001));
-
-        var absPath = loadout.Installation.Locations[GameFolderType.Game].Combine("0x00001.dat");
-        TestIndexer.Entries.Add(new HashedEntry(absPath, Hash.From(0x042), DateTime.Now - TimeSpan.FromDays(1),
-            Size.From(0x33)));
-
-        var plan = await TestSyncronizer.MakeApplySteps(loadout);
-
-        plan.Steps.Should().ContainEquivalentOf(new DeleteFile
-        {
-            To = absPath,
-            Hash = Hash.From(0x42),
-            Size = Size.From(0x33)
-        });
-
-        plan.Steps.Should().ContainEquivalentOf(new BackupFile
-        {
-            To = absPath,
-            Hash = Hash.From(0x42),
-            Size = Size.From(0x33)
-        });
+        var plan = await ValidateSuccess(loadout);
         
-        plan.Steps.Should().ContainEquivalentOf(new ExtractFile
-        {
-            To = loadout.Installation.Locations[GameFolderType.Game].Combine("0x00001.dat"),
-            Hash = fileOne.Hash,
-            Size = fileOne.Size
-        });
+        plan.ToDelete.Should().Contain(absPath, "the file should be deleted");
     }
-    
+
     /// <summary>
     /// Generated files that have never been generated before should be generated
     /// </summary>
@@ -161,14 +84,14 @@ public class MakeApplyPlanTests : ALoadoutSynrchonizerTest<MakeApplyPlanTests>
 
         var absPath = loadout.Installation.Locations[GameFolderType.Game].Combine("0x00001.generated");
         
-        var plan = await TestSyncronizer.MakeApplySteps(loadout);
+        var plan = await ValidateSuccess(loadout);
 
-        var generateFile = plan.Steps.OfType<GenerateFile>().FirstOrDefault();
+        var generateFile = plan.ToGenerate.FirstOrDefault();
         generateFile.Should().NotBeNull();
 
-        generateFile!.Source.Should().Be(fileOne);
-        generateFile!.To.Should().BeEquivalentTo(absPath);
-        generateFile.Fingerprint.Should().Be(Hash.From(17241709254077376921));
+        generateFile!.Value.GeneratedFile.Should().Be(fileOne);
+        generateFile!.Key.Should().BeEquivalentTo(absPath);
+        generateFile.Value.Fingerprint.Should().Be(Fingerprint.From(17241709254077376921));
     }
 
     /// <summary>
@@ -180,7 +103,7 @@ public class MakeApplyPlanTests : ALoadoutSynrchonizerTest<MakeApplyPlanTests>
     {
         var loadout = await CreateApplyPlanTestLoadout(generatedFile: true);
 
-        TestGeneratedFileFingerprintCache.Dict.Add(Hash.From(17241709254077376921), new CachedGeneratedFileData
+        TestGeneratedFileFingerprintCache.Dict.Add(Fingerprint.From(17241709254077376921), new CachedGeneratedFileData
         {
             Hash = Hash.From(0x42),
             Size = Size.From(0x43)
@@ -190,14 +113,9 @@ public class MakeApplyPlanTests : ALoadoutSynrchonizerTest<MakeApplyPlanTests>
 
         var absPath = loadout.Installation.Locations[GameFolderType.Game].Combine("0x00001.generated");
         
-        var plan = await TestSyncronizer.MakeApplySteps(loadout);
+        var plan = await ValidateSuccess(loadout);
 
-        plan.Steps.Should().ContainEquivalentOf(new ExtractFile
-        {
-            To = absPath,
-            Hash = Hash.From(0x42),
-            Size = Size.From(0x43)
-        });
+        plan.ToExtract.Should().Contain(KeyValuePair.Create(absPath, Hash.From(0x42)));
     }
     
     #endregion

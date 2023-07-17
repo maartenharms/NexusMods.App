@@ -76,7 +76,7 @@ public class SkyrimSpecialEditionTests : AGameTest<SkyrimSpecialEdition>
         var pluginOrderFile = gameFiles.Files.Values.OfType<PluginOrderFile>().First();
         var flattenedList = (await LoadoutSynchronizer.FlattenLoadout(loadout.Value)).Files.Values.ToList();
 
-        var plan = await LoadoutSynchronizer.MakeApplySteps(loadout.Value);
+        var plan = await LoadoutSynchronizer.Validate(loadout.Value);
 
         using var ms = new MemoryStream();
         await pluginOrderFile.GenerateAsync(ms, plan);

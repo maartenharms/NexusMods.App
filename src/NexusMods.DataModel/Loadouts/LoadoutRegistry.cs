@@ -131,9 +131,9 @@ public class LoadoutRegistry : IDisposable
     /// <param name="modId"></param>
     /// <param name="commitMessage"></param>
     /// <param name="alterfn"></param>
-    public void Alter(LoadoutId loadoutId, ModId modId, string commitMessage, Func<Mod?, Mod?> alterfn)
+    public Loadout Alter(LoadoutId loadoutId, ModId modId, string commitMessage, Func<Mod?, Mod?> alterfn)
     {
-        Alter(loadoutId, commitMessage, loadout =>
+        return Alter(loadoutId, commitMessage, loadout =>
         {
             var existingMod = loadout.Mods.TryGetValue(modId, out var mod) ? mod : null;
 

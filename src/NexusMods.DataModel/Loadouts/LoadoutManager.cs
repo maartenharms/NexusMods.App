@@ -208,13 +208,15 @@ public class LoadoutManager
         managementJob.Progress = new Percent(0.5);
         gameFiles.AddRange(installation.Game.GetGameFiles(installation, Store));
 
-        Registry.Alter(loadout.LoadoutId, mod.Id, "Add game files",
+        var finalLoadout = Registry.Alter(loadout.LoadoutId, mod.Id, "Add game files",
             m => m! with
             {
                 Status = ModStatus.Installed,
                 Enabled = true,
                 Files = m.Files.With(gameFiles, f => f.Id)
             });
+        
+        Registry.SetLastApplied(finalLoadout);
 
     }
 

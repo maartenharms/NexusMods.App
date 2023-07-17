@@ -205,6 +205,7 @@ public class LoadoutSynchronizer
             if (flattenedAppliedState.Files.TryGetValue(gamePath, out var foundFilePair))
             {
                 var appliedMetaData = GetMetaData(foundFilePair, file.Path, appliedFingerprintingState);
+                appliedMetas[gamePath] = appliedMetaData;
                 if (appliedMetaData.Hash != file.Hash || appliedMetaData.Size != file.Size)
                 {
                     conflicts.Add(file);

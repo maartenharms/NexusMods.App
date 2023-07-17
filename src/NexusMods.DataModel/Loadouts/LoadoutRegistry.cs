@@ -1,5 +1,6 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Text;
 using DynamicData;
 using Microsoft.Extensions.Logging;
 using NexusMods.DataModel.Abstractions;
@@ -9,6 +10,8 @@ using NexusMods.DataModel.Games;
 using NexusMods.DataModel.Loadouts.Cursors;
 using NexusMods.DataModel.Loadouts.Markers;
 using NexusMods.DataModel.Loadouts.Mods;
+using NexusMods.Hashing.xxHash64;
+using NexusMods.Paths;
 
 namespace NexusMods.DataModel.Loadouts;
 
@@ -364,5 +367,34 @@ public class LoadoutRegistry : IDisposable
     public LoadoutMarker GetMarker(LoadoutId loadoutId)
     {
         return new LoadoutMarker(this, loadoutId);
+    }
+
+    
+    /// <summary>
+    /// Registers this loadout as the last applied loadout for the attached game.
+    /// </summary>
+    /// <param name="loadout"></param>
+    public void SetLastApplied(Loadout loadout)
+    {
+        var path = loadout.Installation.Locations[GameFolderType.Game];
+        var id = new IdVariableLength(EntityCategory.LastApplied, Encoding.UTF8.GetBytes(path.ToString()));
+        Span<byte> span = stackalloc byte[loadout.DataStoreId.SpanSize + 1];
+        loadout.DataStoreId.ToTaggedSpan(span);
+        _store.PutRaw(id, span);
+    }
+
+    /// <summary>
+    /// Gets the last applied loadout for the game attached to this loadout.
+    /// </summary>
+    /// <param name="loadout"></param>
+    /// <returns></returns>
+    public Loadout? GetLastApplied(Loadout loadout)
+    {
+        var path = loadout.Installation.Locations[GameFolderType.Game];
+        var id = new IdVariableLength(EntityCategory.LastApplied, Encoding.UTF8.GetBytes(path.ToString()));
+        var data = _store.GetRaw(id);
+        if (data == null) return null;
+        var loadoutId = IId.FromTaggedSpan(data);
+        return _store.Get<Loadout>(loadoutId);
     }
 }

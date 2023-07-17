@@ -1,4 +1,5 @@
 ﻿using NexusMods.DataModel.Loadouts.LoadoutSynchronizerDTOs;
+using NexusMods.DataModel.Loadouts.LoadoutSynchronizerDTOs.PlanStates;
 using NexusMods.DataModel.TriggerFilter;
 using NexusMods.Hashing.xxHash64;
 
@@ -12,7 +13,7 @@ public interface IGeneratedFile
     /// <summary>
     /// The trigger filter that determines if this file should be re-generated.
     /// </summary>
-    public ITriggerFilter<ModFilePair, Plan> TriggerFilter { get; }
+    public ITriggerFilter<ModFilePair, PartiallyCompletedValidationState> TriggerFilter { get; }
     
     /// <summary>
     /// Generates the contents of the file
@@ -21,5 +22,5 @@ public interface IGeneratedFile
     /// <param name="plan"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public Task<Hash> GenerateAsync(Stream stream, ApplyPlan plan, CancellationToken cancellationToken = default);
+    public Task<Hash> GenerateAsync(Stream stream, SuccessfulValidationResult validationResult, CancellationToken cancellationToken = default);
 }

@@ -18,5 +18,5 @@ public interface ITriggerFilter<in TSelf, in TInput>
     /// <param name="self"></param>
     /// <param name="input"></param>
     /// <returns></returns>
-    public Hash GetFingerprint(TSelf self, TInput input);
+    public Fingerprint GetFingerprint(TSelf self, TInput input);
 }

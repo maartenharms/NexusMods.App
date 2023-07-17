@@ -17,12 +17,12 @@ public interface IFingerprintCache<TSrc, TValue> where TValue : Entity
     /// <param name="hash"></param>
     /// <param name="value"></param>
     /// <returns></returns>
-    public bool TryGet(Hash hash, out TValue value);
+    public bool TryGet(Fingerprint hash, out TValue value);
     
     /// <summary>
     /// Set the value for a given fingerprint in the cache
     /// </summary>
     /// <param name="hash"></param>
     /// <param name="value"></param>
-    public void Set(Hash hash, TValue value);
+    public void Set(Fingerprint hash, TValue value);
 }

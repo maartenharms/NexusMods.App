@@ -46,7 +46,7 @@ public struct Fingerprinter : IDisposable
     /// Finalizes the fingerprinter and returns the hash
     /// </summary>
     /// <returns></returns>
-    public Hash Digest()
+    public Fingerprint Digest()
     {
         _binaryWriter.Flush();
         var ms = ((MemoryStream) _binaryWriter.BaseStream);
@@ -56,7 +56,7 @@ public struct Fingerprinter : IDisposable
         var hash = Hash.FromULong(algo.HashBytes(ms.ToArray()));
         
         _binaryWriter.Close();
-        return hash;
+        return Fingerprint.From(hash.Value);
     }
 
     /// <inheritdoc />

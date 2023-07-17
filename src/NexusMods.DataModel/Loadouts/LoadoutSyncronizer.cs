@@ -1,18 +1,25 @@
 ﻿using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Text.Json;
+using DynamicData;
 using Microsoft.Extensions.Logging;
 using NexusMods.Common;
 using NexusMods.DataModel.Abstractions;
 using NexusMods.DataModel.Extensions;
+using NexusMods.DataModel.Games;
 using NexusMods.DataModel.Loadouts.ApplySteps;
 using NexusMods.DataModel.Loadouts.IngestSteps;
 using NexusMods.DataModel.Loadouts.LoadoutSynchronizerDTOs;
+using NexusMods.DataModel.Loadouts.LoadoutSynchronizerDTOs.PlanStates;
+using NexusMods.DataModel.Loadouts.LoadoutSynchronizerDTOs.PlanStates.Failures;
 using NexusMods.DataModel.Loadouts.ModFiles;
 using NexusMods.DataModel.Loadouts.Mods;
 using NexusMods.DataModel.Sorting;
 using NexusMods.DataModel.Sorting.Rules;
 using NexusMods.DataModel.TriggerFilter;
 using NexusMods.FileExtractor.StreamFactories;
+using NexusMods.Hashing.xxHash64;
 using NexusMods.Paths;
 using BackupFile = NexusMods.DataModel.Loadouts.ApplySteps.BackupFile;
 
@@ -61,9 +68,9 @@ public class LoadoutSynchronizer
     /// </summary>
     /// <param name="loadout"></param>
     /// <returns></returns>
-    public async ValueTask<(IReadOnlyDictionary<GamePath, ModFilePair> Files, IEnumerable<Mod> Mods)> FlattenLoadout(Loadout loadout)
+    public async ValueTask<FlattenedLoadout> FlattenLoadout(Loadout loadout)
     {
-        var dict = new Dictionary<GamePath, ModFilePair>();
+        var files = new Dictionary<GamePath, ModFilePair>();
 
         var sorted = (await SortMods(loadout)).ToList();
 
@@ -74,10 +81,15 @@ public class LoadoutSynchronizer
                 if (file is not IToFile toFile)
                     continue;
 
-                dict[toFile.To] = new ModFilePair {Mod = mod, File = file};
+                files[toFile.To] = new ModFilePair {Mod = mod, File = file};
             }
         }
-        return (dict, sorted);
+
+        return new FlattenedLoadout
+        {
+            Files = files,
+            Mods = sorted
+        };
     }
 
 
@@ -133,158 +145,180 @@ public class LoadoutSynchronizer
             }
         }
     }
-
-    /// <summary>
-    /// Generates a list of steps that need to be taken to synchronize the given loadout with the game folders.
-    /// </summary>
-    /// <param name="loadout"></param>
-    /// <param name="token"></param>
-    /// <returns></returns>
-    public async ValueTask<ApplyPlan> MakeApplySteps(Loadout loadout, CancellationToken token = default)
+    
+    private async ValueTask<AValidationResult> Validate(BaseConfiguration baseConfiguration, CancellationToken token)
     {
-
-        var install = loadout.Installation;
-
-        var existingFiles = _directoryIndexer.IndexFolders(install.Locations.Values, token);
-
-        var (flattenedLoadout, sortedMods) = await FlattenLoadout(loadout);
-
-        var seen = new ConcurrentBag<GamePath>();
-
-        var plan = new List<IApplyStep>();
-
-        var tmpPlan = new Plan
+        var plannedState = baseConfiguration.PlannedState;
+        var appliedState = _loadoutRegistry.GetLastApplied(plannedState);
+        var flattenedPlannedState = await FlattenLoadout(plannedState);
+        
+        if (appliedState == null)
         {
-            Loadout = loadout,
-            Flattened = flattenedLoadout,
-            Mods = Array.Empty<Mod>(),
-        };
-
-        await foreach (var existing in existingFiles.WithCancellation(token))
-        {
-            var gamePath = install.ToGamePath(existing.Path);
-            seen.Add(gamePath);
-
-            if (flattenedLoadout.TryGetValue(gamePath, out var planned))
+            return new NoPreviouslyAppliedState()
             {
-                var planMetadata = await GetMetaData(planned.File, existing.Path);
-                if (planMetadata is null || planMetadata.Hash != existing.Hash || planMetadata.Size != existing.Size)
+                PlannedState = plannedState,
+            };
+        }
+
+
+        var flattenedAppliedState = await FlattenLoadout(appliedState);
+        var existingFiles = _directoryIndexer.IndexFolders(plannedState.Installation.Locations.Values, token);
+        
+        var conflicts = new List<HashedEntry>();
+
+        var diskState = new Dictionary<GamePath, HashedEntry>();
+        
+        
+        
+        var appliedMetas = new Dictionary<GamePath, FileMetaData>();
+
+        var partialState = new PartiallyCompletedValidationState
+        {
+            PlannedState = plannedState,
+            AppliedState = appliedState,
+            FlattenedAppliedState = flattenedAppliedState,
+            FlattenedPlannedState = flattenedPlannedState,
+        };
+        
+        await foreach (var file in existingFiles.WithCancellation(token))
+        {
+            var gamePath = plannedState.Installation.ToGamePath(file.Path);
+            diskState.Add(gamePath, file);
+            if (flattenedAppliedState.Files.TryGetValue(gamePath, out var foundFilePair))
+            {
+                var appliedMetaData = GetMetaData(foundFilePair, file.Path, partialState);
+                if (appliedMetaData.Hash != file.Hash || appliedMetaData.Size != file.Size)
                 {
-                    await EmitReplacePlan(plan, existing, tmpPlan, planned);
+                    conflicts.Add(file);
                 }
+                
             }
             else
             {
-                await EmitDeletePlan(plan, existing);
+                conflicts.Add(file);
             }
         }
 
-        foreach (var (gamePath, pair) in flattenedLoadout.Where(kv => !seen.Contains(kv.Key)))
+        if (conflicts.Any())
         {
-            var absPath = gamePath.CombineChecked(install);
+            return new UningestedFiles
+            {
+                PlannedState = plannedState,
+                AppliedState = appliedState,
+                Conflicts = conflicts,
+                DiskState = new ReadOnlyDictionary<GamePath, HashedEntry>(diskState),
+                FlattenedAppliedState = flattenedAppliedState,
+                FlattenedPlannedState = flattenedPlannedState
+            };
+        }
+        
+        // From now on we know that the disk state is in sync with the applied state
+        // so we can use the disk state and the applied state interchangeably
+        
+        var toExtract = new Dictionary<AbsolutePath, Hash>();
+        var toGenerate = new Dictionary<AbsolutePath, GeneratedFileState>();
+        var toDelete = new HashSet<AbsolutePath>();
 
-            if (seen.Contains(gamePath))
-                continue;
-
-            await EmitCreatePlan(plan, pair, tmpPlan, absPath);
+        void AddToCreate(GamePath path, ModFilePair pair)
+        {
+            var absPath = path.CombineChecked(plannedState.Installation);
+            switch (pair.File)
+            {
+                case IFromArchive fromArchive:
+                    toExtract!.Add(absPath, fromArchive.Hash);
+                    break;
+                case IGeneratedFile generatedFile:
+                    var fingerprint = generatedFile.TriggerFilter.GetFingerprint(pair, partialState);
+                    toGenerate!.Add(absPath, new GeneratedFileState()
+                    {
+                        GeneratedFile = generatedFile,
+                        ModFilePair = pair,
+                        Fingerprint = fingerprint
+                    });
+                    break;
+            }
         }
 
-        return new ApplyPlan
+
+        // Files that are no longer needed in the game folder should be deleted
+        foreach (var (path, _) in flattenedAppliedState.Files)
         {
-            Steps = plan,
-            Mods = sortedMods,
-            Flattened = flattenedLoadout,
-            Loadout = loadout
+            if (!flattenedPlannedState.Files.ContainsKey(path))
+            {
+                toDelete.Add(diskState[path].Path);
+            }
+        }
+
+        // Files that are in the planned state but not in the applied state should be created or replaced
+        foreach (var (path, pair) in flattenedPlannedState.Files)
+        {
+            var absPath = path.CombineChecked(plannedState.Installation);
+            if (flattenedAppliedState.Files.ContainsKey(path))
+            {
+                var appliedMeta = appliedMetas[path];
+                var plannedMeta = GetMetaData(pair, absPath, partialState);
+                if (appliedMeta.Fingerprint != null && plannedMeta.Fingerprint != null)
+                {
+                    if (appliedMeta.Fingerprint.Value == plannedMeta.Fingerprint.Value)
+                        continue;
+                }
+                else
+                {
+                    if (appliedMeta.Size == plannedMeta.Size && appliedMeta.Hash == plannedMeta.Hash)
+                        continue;
+                }
+                toDelete.Add(absPath);
+                AddToCreate(path, pair);
+            }
+            else
+            {
+                AddToCreate(path, pair);
+            }
+        }
+        
+        return new SuccessfulValidationResult
+        {
+            PlannedState = plannedState,
+            AppliedState = appliedState,
+            DiskState = new ReadOnlyDictionary<GamePath, HashedEntry>(diskState),
+            FlattenedAppliedState = flattenedAppliedState,
+            FlattenedPlannedState = flattenedPlannedState,
+            ToExtract = new ReadOnlyDictionary<AbsolutePath, Hash>(toExtract),
+            ToGenerate = toGenerate,
+            ToDelete = toDelete
         };
     }
 
-    private async ValueTask EmitCreatePlan(List<IApplyStep> plan, ModFilePair pair, Plan tmpPlan, AbsolutePath absPath)
-    {
-        // If the file is from an archive, then we can just extract it
-        if (pair.File is IFromArchive fromArchive)
-        {
-            plan.Add(new ExtractFile
-            {
-                To = absPath,
-                Hash = fromArchive.Hash,
-                Size = fromArchive.Size
-            });
-            return;
-        }
-        
-        // If the file is generated
-        if (pair.File is IGeneratedFile generatedFile)
-        {
-            // Get the fingerprint for the generated file
-            var fingerprint = generatedFile.TriggerFilter.GetFingerprint(pair, tmpPlan);
-            if (_generatedFileFingerprintCache.TryGet(fingerprint, out var cached))
-            {
-                // If we have a cached version of the file in an archive, then we can just extract it
-                if (await _archiveManager.HaveFile(cached.Hash))
-                {
-                    plan.Add(new ExtractFile
-                    {
-                        To = absPath,
-                        Hash = cached.Hash,
-                        Size = cached.Size
-                    });
-                    return;
-                }
-            }
-
-            // Otherwise we need to generate the file
-            plan.Add(new GenerateFile
-            {
-                To = absPath,
-                Source = generatedFile,
-                Fingerprint = fingerprint
-            });
-            return;
-        }
-
-        // This should never happen
-        _logger.LogError("Unknown file type {Type}", pair.File.GetType().Name);
-        throw new UnreachableException();
-    }
-
-    private async ValueTask EmitDeletePlan(List<IApplyStep> plan, HashedEntry existing)
-    {
-        if (!await _archiveManager.HaveFile(existing.Hash))
-        {
-            plan.Add(new BackupFile
-            {
-                Hash = existing.Hash,
-                Size = existing.Size,
-                To = existing.Path
-            });
-        }
-
-        plan.Add(new DeleteFile
-        {
-            To = existing.Path,
-            Hash = existing.Hash,
-            Size = existing.Size
-        });
-    }
-
-    private async ValueTask EmitReplacePlan(List<IApplyStep> plan, HashedEntry existing, Plan tmpPlan, ModFilePair pair)
-    {
-        await EmitDeletePlan(plan, existing);
-        await EmitCreatePlan(plan, pair, tmpPlan, existing.Path);
-    }
 
     /// <summary>
     /// Gets the metadata for the given file, if the file is from an archive then the metadata is returned
     /// </summary>
-    /// <param name="file"></param>
+    /// <param name="pair"></param>
     /// <param name="path"></param>
+    /// <param name="state"></param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    public ValueTask<FileMetaData?> GetMetaData(AModFile file, AbsolutePath path)
+    public FileMetaData GetMetaData(ModFilePair pair, AbsolutePath path, PartiallyCompletedValidationState state)
     {
-        if (file is IFromArchive fa)
-            return ValueTask.FromResult<FileMetaData?>(new FileMetaData(path, fa.Hash, fa.Size));
-        throw new NotImplementedException();
+        switch (pair.File)
+        {
+            case IFromArchive fa:
+                return new FileMetaData(path, fa.Hash, fa.Size);
+            case IGeneratedFile gf:
+            {
+                var fingerprint = gf.TriggerFilter.GetFingerprint(pair, state);
+                if (_generatedFileFingerprintCache.TryGet(fingerprint, out var cached))
+                {
+                    return new FileMetaData(path, cached.Hash, cached.Size);
+                }
+                else
+                {
+                    return new FileMetaData(path, Fingerprint:fingerprint);
+                }
+            }
+            default:
+                throw new NotImplementedException("Unknown file type, this should never happen");
+        }
     }
 
     /// <summary>
@@ -296,6 +330,8 @@ public class LoadoutSynchronizer
     /// <returns></returns>
     public async ValueTask<IngestPlan> MakeIngestPlan(Loadout loadout, Func<AbsolutePath, ModId> modSelector, CancellationToken token = default)
     {
+        throw new NotImplementedException();
+        /*
         var install = loadout.Installation;
 
         var existingFiles = _directoryIndexer.IndexFolders(install.Locations.Values, token);
@@ -340,6 +376,7 @@ public class LoadoutSynchronizer
             Flattened = flattenedLoadout,
             Loadout = loadout
         };
+        */
     }
 
     private ValueTask EmitRemoveFromLoadout(List<IIngestStep> plan, AbsolutePath absPath)
@@ -399,48 +436,37 @@ public class LoadoutSynchronizer
     /// </summary>
     /// <param name="plan"></param>
     /// <param name="token"></param>
-    public async Task Apply(ApplyPlan plan, CancellationToken token = default)
+    public async Task Apply(SuccessfulValidationResult plan, CancellationToken token = default)
     {
-        // Step 1: Backup Files
-        var byType = plan.Steps.ToLookup(g => g.GetType());
-
-        var backups = byType[typeof(BackupFile)]
-            .OfType<BackupFile>()
-            .Select(f => ((IStreamFactory)new NativeFileStreamFactory(f.To), f.Hash, f.Size))
-            .ToList();
-
-        if (backups.Any())
-            await _archiveManager.BackupFiles(backups, token);
-
-        // Step 2: Delete Files
-        foreach (var file in byType[typeof(DeleteFile)].OfType<DeleteFile>())
+        // Step 1: Delete Files
+        foreach (var path in plan.ToDelete)
         {
-            file.To.Delete();
+            path.Delete();
         }
-
+        
         // Step 3: Extract Files
-        var extractedFiles = byType[typeof(ExtractFile)]
-            .OfType<ExtractFile>()
-            .Select(f => (f.Hash, f.To));
+        var extractedFiles = plan.ToExtract
+            .Select(kv => (kv.Value, kv.Key));
         await _archiveManager.ExtractFiles(extractedFiles, token);
 
         // Step 4: Write Generated Files
-        var generatedFiles = byType[typeof(GenerateFile)].OfType<GenerateFile>();
-        foreach (var file in generatedFiles)
+        foreach (var (absPath, generatedFile) in plan.ToGenerate)
         {
-            var absPath = file.To;
             var dir = absPath.Parent;
             if (!dir.DirectoryExists())
                 dir.CreateDirectory();
 
             await using var stream = absPath.Create();
-            var hash = await file.Source.GenerateAsync(stream, plan, token);
-            _generatedFileFingerprintCache.Set(file.Fingerprint, new CachedGeneratedFileData
+            var hash = await generatedFile.GeneratedFile.GenerateAsync(stream, plan, token);
+            _generatedFileFingerprintCache.Set(generatedFile.Fingerprint, new CachedGeneratedFileData
             {
                 Hash = hash,
                 Size = Size.FromLong(stream.Length)
             });
         }
+        
+        // Step 5: Update Loadout last applied state
+        _loadoutRegistry.SetLastApplied(plan.PlannedState);
     }
 
     /// <summary>
@@ -450,15 +476,17 @@ public class LoadoutSynchronizer
     /// <param name="commitMessage"></param>
     public async ValueTask<Loadout> Ingest(IngestPlan plan, string commitMessage = "Ingested Changes")
     {
+        throw new NotImplementedException();
         var byType = plan.Steps.ToLookup(t => t.GetType());
         var backupFiles = byType[typeof(IngestSteps.BackupFile)]
             .OfType<IngestSteps.BackupFile>()
             .Select(f => ((IStreamFactory)new NativeFileStreamFactory(f.Source), f.Hash, f.Size));
         await _archiveManager.BackupFiles(backupFiles);
 
-        return _loadoutRegistry.Alter(plan.Loadout.LoadoutId, commitMessage, new IngestVisitor(byType, plan));
+        //return _loadoutRegistry.Alter(plan.Loadout.LoadoutId, commitMessage, new IngestVisitor(byType, plan));
     }
 
+    /*
     private class IngestVisitor : ALoadoutVisitor
     {
         private readonly IngestPlan _plan;
@@ -520,7 +548,6 @@ public class LoadoutSynchronizer
             return base.Alter(mod);
         }
     }
-
-
+    */
 }
 

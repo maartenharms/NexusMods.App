@@ -108,4 +108,9 @@ public enum EntityCategory : byte
     /// See <see cref="Diagnostics"/>.
     /// </summary>
     Diagnostics = 14,
+    
+    /// <summary>
+    /// A record of the last applied loadout for each installed game
+    /// </summary>
+    LastApplied = 15,
 }

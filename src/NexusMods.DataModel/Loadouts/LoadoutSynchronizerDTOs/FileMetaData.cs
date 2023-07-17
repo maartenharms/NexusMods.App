@@ -1,4 +1,5 @@
-﻿using NexusMods.Hashing.xxHash64;
+﻿using NexusMods.DataModel.TriggerFilter;
+using NexusMods.Hashing.xxHash64;
 using NexusMods.Paths;
 
 namespace NexusMods.DataModel.Loadouts.LoadoutSynchronizerDTOs;
@@ -9,4 +10,5 @@ namespace NexusMods.DataModel.Loadouts.LoadoutSynchronizerDTOs;
 /// <param name="Path"></param>
 /// <param name="Hash"></param>
 /// <param name="Size"></param>
-public record FileMetaData(AbsolutePath Path, Hash Hash, Size Size);
+/// <param name="Fingerprint"></param>
+public record FileMetaData(AbsolutePath Path, Hash? Hash = null, Size? Size = null, Fingerprint? Fingerprint = null);

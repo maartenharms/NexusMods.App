@@ -11,7 +11,7 @@ namespace NexusMods.DataModel.TriggerFilter;
 /// <typeparam name="TValue"></typeparam>
 public class DataStoreFingerprintCache<TSrc, TValue> : IFingerprintCache<TSrc, TValue> where TValue : Entity {
     private readonly IDataStore _store;
-    private readonly Hash _prefix;
+    private readonly Fingerprint _prefix;
 
     /// <summary>
     /// DI Constructor
@@ -44,13 +44,13 @@ public class DataStoreFingerprintCache<TSrc, TValue> : IFingerprintCache<TSrc, T
     }
 
     /// <inheritdoc />
-    public void Set(Hash hash, TValue value)
+    public void Set(Fingerprint fingerprint, TValue value)
     {
-        _store.Put(GetId(hash), value);
+        _store.Put(GetId(fingerprint), value);
     }
 
-    private TwoId64 GetId(Hash hash)
+    private TwoId64 GetId(Fingerprint fingerprint)
     {
-        return new TwoId64(EntityCategory.Loadouts, _prefix.Value, hash.Value);
+        return new TwoId64(EntityCategory.Loadouts, _prefix.Value, fingerprint.Value);
     }
 }

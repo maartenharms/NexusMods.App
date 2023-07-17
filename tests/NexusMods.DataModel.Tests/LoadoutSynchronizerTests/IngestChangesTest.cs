@@ -191,9 +191,14 @@ public class IngestChangesTest : ALoadoutSynrchonizerTest<IngestChangesTest>
         lines = lines.Skip(1).Take(1).ToArray();
 
         await fileLocation.WriteAllLinesAsync(lines.Select(l => l.ToString()));
+
+        plan = await LoadoutSynchronizer.MakeApplySteps(loadout);
         
+        
+        /*
         var ingestPlan = await LoadoutSynchronizer.MakeIngestPlan(loadout, _ => firstMod.Id);
         await LoadoutSynchronizer.Ingest(ingestPlan);
+        */
         
         
 

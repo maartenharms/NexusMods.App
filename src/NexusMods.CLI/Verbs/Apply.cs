@@ -2,6 +2,7 @@ using DynamicData;
 using NexusMods.CLI.DataOutputs;
 using NexusMods.DataModel.Loadouts;
 using NexusMods.DataModel.Loadouts.ApplySteps;
+using NexusMods.DataModel.Loadouts.LoadoutSynchronizerDTOs.PlanStates;
 using NexusMods.DataModel.Loadouts.Markers;
 using NexusMods.Paths;
 
@@ -39,50 +40,48 @@ public class Apply : AVerb<LoadoutMarker, bool, bool>
     public async Task<int> Run(LoadoutMarker loadout, bool run, bool summary, CancellationToken token)
     {
 
-        var plan = await _loadoutSyncronizer.MakeApplySteps(loadout.Value, token);
+        var plan = await _loadoutSyncronizer.Validate(loadout.Value, token);
+        if (plan is IFailedValidation failedValidation)
+        {
+            await _renderer.Render($"Failed to validate loadout: {failedValidation.Message}");
+            return -1;
+        }
 
+        var validation = (SuccessfulValidationResult)plan;
         if (summary)
         {
-            var rows = plan.Steps.GroupBy(s => s.GetType())
-                .Select(g =>
-                    new object[]
-                    {
-                        g.Key.Name, g.Count(), g.OfType<IStaticFileStep>().Aggregate((Size)0L, (o, n) => o + n.Size)
-                    });
-            await _renderer.Render(new Table(new[] { "Action", "Count", "Size" }, rows));
+            var rows = new List<IEnumerable<object>>();
+            rows.Add(new object[] {"Delete", validation.ToDelete.Count});
+            rows.Add(new object[] {"Extract", validation.ToExtract.Count});
+            rows.Add(new object[] {"Generate", validation.ToGenerate.Count});
+            await _renderer.Render(new Table(new[] { "Action", "Count" }, rows));
         }
         else
         {
-            var rows = new List<object[]>();
-            foreach (var step in plan.Steps)
+            var rows = new List<IEnumerable<object>>();
+            foreach (var path in validation.ToDelete)
             {
-                switch (step)
-                {
-                    case ExtractFile ef:
-                        rows.Add(new object[] { ef, ef.To, ef.Hash, ef.Size});
-                        break;
-                    case BackupFile bf:
-                        rows.Add(new object[] { bf, bf.To, bf.Hash, bf.Size});
-                        break;
-                    case DeleteFile df:
-                        rows.Add(new object[] { df, df.To, df.Hash, df.Size });
-                        break;
-                    case GenerateFile gf:
-                        rows.Add(new object[] { gf, gf.To, gf.Fingerprint, "-"});
-                        break;
-                    default:
-                        throw new InvalidOperationException($"Unknown step type ({step.GetType()}) encountered, this should never happen.");
-                }
+                rows.Add(new object[] {"Delete", path});
             }
-            await _renderer.Render(new Table(new[] { "Action", "To", "Hash", "Size" }, rows));
+
+            foreach (var (path, hash) in validation.ToExtract)
+            {
+                rows.Add(new object[] {"Extract", path, hash});
+            }
+
+            foreach (var (path, generatedFileState) in validation.ToGenerate)
+            {
+                rows.Add(new object[] {"Generate", path, generatedFileState.Fingerprint});
+            }
+            await _renderer.Render(new Table(new[] { "Action", "Path", "Hash / Fingerprint" }, rows));
         }
 
         if (run)
         {
             await _renderer.WithProgress(token, async () =>
             {
-                await _loadoutSyncronizer.Apply(plan, token);
-                return plan.Steps;
+                await _loadoutSyncronizer.Apply(validation, token);
+                return 0;
             });
         }
         return 0;

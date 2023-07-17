@@ -1,6 +1,7 @@
 ﻿using NexusMods.DataModel.Abstractions;
 using NexusMods.DataModel.Games;
 using NexusMods.DataModel.Loadouts;
+using NexusMods.DataModel.Loadouts.LoadoutSynchronizerDTOs.PlanStates;
 using NexusMods.DataModel.Loadouts.Mods;
 
 namespace NexusMods.DataModel;
@@ -44,8 +45,16 @@ public class ToolManager : IToolManager
         if (!tool.Domains.Contains(loadout.Installation.Game.Domain))
             throw new Exception("Tool does not support this game");
 
-        var plan = await _loadoutSynchronizer.MakeApplySteps(loadout, token);
-        await _loadoutSynchronizer.Apply(plan, token);
+        var validation = await _loadoutSynchronizer.Validate(loadout, token);
+        if (validation is IFailedValidation)
+        {
+            // TODO: Handle THIS
+        }
+        else
+        {
+            await _loadoutSynchronizer.Apply((SuccessfulValidationResult)validation, token);
+            
+        }
 
         await tool.Execute(loadout);
         var modName = $"{tool.Name} Generated Files";

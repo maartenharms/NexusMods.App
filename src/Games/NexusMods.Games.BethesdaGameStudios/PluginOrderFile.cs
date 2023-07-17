@@ -2,6 +2,7 @@ using NexusMods.DataModel;
 using NexusMods.DataModel.JsonConverters;
 using NexusMods.DataModel.Loadouts;
 using NexusMods.DataModel.Loadouts.LoadoutSynchronizerDTOs;
+using NexusMods.DataModel.Loadouts.LoadoutSynchronizerDTOs.PlanStates;
 using NexusMods.DataModel.Loadouts.ModFiles;
 using NexusMods.DataModel.Loadouts.Mods;
 using NexusMods.DataModel.Sorting;
@@ -16,7 +17,7 @@ using Noggog;
 namespace NexusMods.Games.BethesdaGameStudios;
 
 [JsonName("BethesdaGameStudios.PluginOrderFile")]
-public record PluginOrderFile : AModFile, IGeneratedFile, IToFile, ITriggerFilter<ModFilePair, Plan>
+public record PluginOrderFile : AModFile, IGeneratedFile, IToFile, ITriggerFilter<ModFilePair, FingerprintingValidationState>
 {
     private static RelativePath[] _defaultOrdering = new[]
     {
@@ -114,11 +115,11 @@ public record PluginOrderFile : AModFile, IGeneratedFile, IToFile, ITriggerFilte
         public IReadOnlyList<ISortRule<ModRuleTuple, RelativePath>> Rules;
     }
 
-    public ITriggerFilter<ModFilePair, Plan> TriggerFilter => this;
+    public ITriggerFilter<ModFilePair, FingerprintingValidationState> TriggerFilter => this;
 
-    public async Task<Hash> GenerateAsync(Stream stream, ApplyPlan plan, CancellationToken token = default)
+    public async Task<Hash> GenerateAsync(Stream stream, FingerprintingValidationState plan, CancellationToken token = default)
     {
-        var pluginFiles = PluginFiles(plan.Flattened.Values).ToArray();
+        var pluginFiles = PluginFiles(plan.FlattenedLoadout.Files.Values).ToArray();
 
         var pluginFileRuleTuples = InitialiseFileRuleTuples(pluginFiles);
 
@@ -132,11 +133,11 @@ public record PluginOrderFile : AModFile, IGeneratedFile, IToFile, ITriggerFilte
         return await stream.XxHash64Async(token);
     }
 
-    public Hash GetFingerprint(ModFilePair self, Plan plan)
+    public Fingerprint GetFingerprint(ModFilePair self, FingerprintingValidationState plan)
     {
         using var fingerprinter = Fingerprinter.Create();
 
-        plan.Flattened
+        plan.FlattenedLoadout.Files
             .Where(f => SkyrimSpecialEdition.PluginExtensions.Contains(f.Key.Extension))
             .Select(f => (f.Key.FileName, f.Value.File.DataStoreId))
             .OrderBy(f => f)

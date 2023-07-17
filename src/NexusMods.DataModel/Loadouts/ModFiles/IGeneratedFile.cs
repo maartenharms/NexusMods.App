@@ -13,14 +13,14 @@ public interface IGeneratedFile
     /// <summary>
     /// The trigger filter that determines if this file should be re-generated.
     /// </summary>
-    public ITriggerFilter<ModFilePair, PartiallyCompletedValidationState> TriggerFilter { get; }
-    
+    public ITriggerFilter<ModFilePair, FingerprintingValidationState> TriggerFilter { get; }
+
     /// <summary>
     /// Generates the contents of the file
     /// </summary>
     /// <param name="stream"></param>
-    /// <param name="plan"></param>
+    /// <param name="validationResult"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public Task<Hash> GenerateAsync(Stream stream, SuccessfulValidationResult validationResult, CancellationToken cancellationToken = default);
+    public Task<Hash> GenerateAsync(Stream stream, FingerprintingValidationState validationResult, CancellationToken cancellationToken = default);
 }

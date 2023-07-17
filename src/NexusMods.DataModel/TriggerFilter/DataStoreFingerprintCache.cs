@@ -30,7 +30,7 @@ public class DataStoreFingerprintCache<TSrc, TValue> : IFingerprintCache<TSrc, T
 
 
     /// <inheritdoc />
-    public bool TryGet(Hash hash, out TValue value)
+    public bool TryGet(Fingerprint hash, out TValue value)
     {
         var ret = _store.Get<TValue>(GetId(hash));
         if (ret != null)

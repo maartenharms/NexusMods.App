@@ -145,8 +145,28 @@ public class LoadoutSynchronizer
             }
         }
     }
-    
-    private async ValueTask<AValidationResult> Validate(BaseConfiguration baseConfiguration, CancellationToken token)
+
+    /// <summary>
+    /// Validates the given loadout, checking that it can be applied, given the current state of the game folders.
+    /// </summary>
+    /// <param name="loadout"></param>
+    /// <param name="token"></param>
+    /// <returns></returns>
+    public async ValueTask<AValidationResult> Validate(Loadout loadout, CancellationToken token)
+    {
+        return await Validate(new BaseConfiguration
+        {
+            PlannedState = loadout
+        }, token);
+    }
+
+    /// <summary>
+    /// Validates the given base configuration, checking that it can be applied, given the current state of the game folders.
+    /// </summary>
+    /// <param name="baseConfiguration"></param>
+    /// <param name="token"></param>
+    /// <returns></returns>
+    public async ValueTask<AValidationResult> Validate(BaseConfiguration baseConfiguration, CancellationToken token)
     {
         var plannedState = baseConfiguration.PlannedState;
         var appliedState = _loadoutRegistry.GetLastApplied(plannedState);
@@ -172,12 +192,10 @@ public class LoadoutSynchronizer
         
         var appliedMetas = new Dictionary<GamePath, FileMetaData>();
 
-        var partialState = new PartiallyCompletedValidationState
+        var appliedFingerprintingState = new FingerprintingValidationState
         {
-            PlannedState = plannedState,
-            AppliedState = appliedState,
-            FlattenedAppliedState = flattenedAppliedState,
-            FlattenedPlannedState = flattenedPlannedState,
+            Loadout = appliedState,
+            FlattenedLoadout = flattenedAppliedState
         };
         
         await foreach (var file in existingFiles.WithCancellation(token))
@@ -186,7 +204,7 @@ public class LoadoutSynchronizer
             diskState.Add(gamePath, file);
             if (flattenedAppliedState.Files.TryGetValue(gamePath, out var foundFilePair))
             {
-                var appliedMetaData = GetMetaData(foundFilePair, file.Path, partialState);
+                var appliedMetaData = GetMetaData(foundFilePair, file.Path, appliedFingerprintingState);
                 if (appliedMetaData.Hash != file.Hash || appliedMetaData.Size != file.Size)
                 {
                     conflicts.Add(file);
@@ -219,6 +237,12 @@ public class LoadoutSynchronizer
         var toGenerate = new Dictionary<AbsolutePath, GeneratedFileState>();
         var toDelete = new HashSet<AbsolutePath>();
 
+        var plannedFingerprintingState = new FingerprintingValidationState
+        {
+            Loadout = plannedState,
+            FlattenedLoadout = flattenedPlannedState
+        };
+
         void AddToCreate(GamePath path, ModFilePair pair)
         {
             var absPath = path.CombineChecked(plannedState.Installation);
@@ -228,7 +252,7 @@ public class LoadoutSynchronizer
                     toExtract!.Add(absPath, fromArchive.Hash);
                     break;
                 case IGeneratedFile generatedFile:
-                    var fingerprint = generatedFile.TriggerFilter.GetFingerprint(pair, partialState);
+                    var fingerprint = generatedFile.TriggerFilter.GetFingerprint(pair, plannedFingerprintingState);
                     toGenerate!.Add(absPath, new GeneratedFileState()
                     {
                         GeneratedFile = generatedFile,
@@ -248,6 +272,8 @@ public class LoadoutSynchronizer
                 toDelete.Add(diskState[path].Path);
             }
         }
+        
+
 
         // Files that are in the planned state but not in the applied state should be created or replaced
         foreach (var (path, pair) in flattenedPlannedState.Files)
@@ -256,7 +282,7 @@ public class LoadoutSynchronizer
             if (flattenedAppliedState.Files.ContainsKey(path))
             {
                 var appliedMeta = appliedMetas[path];
-                var plannedMeta = GetMetaData(pair, absPath, partialState);
+                var plannedMeta = GetMetaData(pair, absPath, plannedFingerprintingState);
                 if (appliedMeta.Fingerprint != null && plannedMeta.Fingerprint != null)
                 {
                     if (appliedMeta.Fingerprint.Value == plannedMeta.Fingerprint.Value)
@@ -298,7 +324,7 @@ public class LoadoutSynchronizer
     /// <param name="state"></param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    public FileMetaData GetMetaData(ModFilePair pair, AbsolutePath path, PartiallyCompletedValidationState state)
+    public FileMetaData GetMetaData(ModFilePair pair, AbsolutePath path, FingerprintingValidationState state)
     {
         switch (pair.File)
         {
@@ -450,6 +476,12 @@ public class LoadoutSynchronizer
         await _archiveManager.ExtractFiles(extractedFiles, token);
 
         // Step 4: Write Generated Files
+        var plannedFingerprintingState = new FingerprintingValidationState
+        {
+            Loadout = plan.PlannedState,
+            FlattenedLoadout = plan.FlattenedPlannedState
+        };
+        
         foreach (var (absPath, generatedFile) in plan.ToGenerate)
         {
             var dir = absPath.Parent;
@@ -457,7 +489,7 @@ public class LoadoutSynchronizer
                 dir.CreateDirectory();
 
             await using var stream = absPath.Create();
-            var hash = await generatedFile.GeneratedFile.GenerateAsync(stream, plan, token);
+            var hash = await generatedFile.GeneratedFile.GenerateAsync(stream, plannedFingerprintingState, token);
             _generatedFileFingerprintCache.Set(generatedFile.Fingerprint, new CachedGeneratedFileData
             {
                 Hash = hash,

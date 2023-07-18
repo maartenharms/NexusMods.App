@@ -10,12 +10,12 @@ public record SuccessfulIngest : CompletedValidationState
     /// <summary>
     /// Files that need to be updated.
     /// </summary>
-    public required IReadOnlyDictionary<AbsolutePath, ModFilePair> ToUpdate { get; init; }
+    public required IReadOnlyDictionary<GamePath, ModFilePair> ToUpdate { get; init; }
     
     /// <summary>
     /// Files that need to be added.
     /// </summary>
-    public required IReadOnlyDictionary<AbsolutePath, ModId> ToAdd { get; init; }
+    public required IReadOnlyDictionary<GamePath, ModId> ToAdd { get; init; }
     
     /// <summary>
     /// Files that need to be deleted.

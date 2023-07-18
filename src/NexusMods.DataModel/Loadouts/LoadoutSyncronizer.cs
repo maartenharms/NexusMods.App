@@ -384,8 +384,8 @@ public class LoadoutSynchronizer
         };
 
         // Files that don't require a fork
-        var toAdd = new Dictionary<AbsolutePath, ModId>();
-        var toUpdate = new Dictionary<AbsolutePath, ModFilePair>();
+        var toAdd = new Dictionary<GamePath, ModId>();
+        var toUpdate = new Dictionary<GamePath, ModFilePair>();
         var toParse = new Dictionary<AbsolutePath, ModFilePair>();
         var toDelete = new HashSet<GamePath>();
         var isForked = false;
@@ -409,7 +409,7 @@ public class LoadoutSynchronizer
                         // They're the same, so we can ignore it
                         continue;
                     
-                    toUpdate.Add(existing.Path, plannedFile);
+                    toUpdate.Add(gamePath, plannedFile);
                     continue;
                 }
 
@@ -459,7 +459,7 @@ public class LoadoutSynchronizer
                 
                 // The file has changed, so we need to back it up and fork the loadout
                 var mod = modSelector(existing.Path);
-                toAdd.Add(existing.Path, mod);
+                toAdd.Add(gamePath, mod);
                 isForked = true;
                 continue;
             }
@@ -592,80 +592,64 @@ public class LoadoutSynchronizer
     /// <param name="commitMessage"></param>
     public async ValueTask<Loadout> Ingest(SuccessfulIngest plan, string commitMessage = "Ingested Changes")
     {
-        throw new NotImplementedException();
-        /*
-        var byType = plan.Steps.ToLookup(t => t.GetType());
-        var backupFiles = byType[typeof(IngestSteps.BackupFile)]
-            .OfType<IngestSteps.BackupFile>()
-            .Select(f => ((IStreamFactory)new NativeFileStreamFactory(f.Source), f.Hash, f.Size));
-        await _archiveManager.BackupFiles(backupFiles);
-        */
-
-        //return _loadoutRegistry.Alter(plan.Loadout.LoadoutId, commitMessage, new IngestVisitor(byType, plan));
+        Debug.Assert(!plan.IsForking, "plan.IsForking == false");
+        
+        return _loadoutRegistry.Alter(plan.PlannedState.LoadoutId, commitMessage, 
+            new IngestVisitor(plan));
     }
 
-    /*
+    
     private class IngestVisitor : ALoadoutVisitor
     {
-        private readonly IngestPlan _plan;
-        private readonly HashSet<GamePath> _removeFiles;
-        private readonly ILookup<ModId,FromArchive> _replaceFiles;
-        private readonly ILookup<ModId,FromArchive> _createFiles;
+        private readonly SuccessfulIngest _plan;
+        private readonly ILookup<ModId,GamePath> _toAdd;
+        private readonly ILookup<ModId,KeyValuePair<GamePath, ModFilePair>> _toUpdate;
 
-        public IngestVisitor(ILookup<Type, IIngestStep> steps, IngestPlan plan)
+        public IngestVisitor(SuccessfulIngest plan)
         {
             _plan = plan;
-            _removeFiles = steps[typeof(IngestSteps.RemoveFromLoadout)]
-                .OfType<IngestSteps.RemoveFromLoadout>()
-                .Select(r => plan.Loadout.Installation.ToGamePath(r.Source))
-                .ToHashSet();
-
-            _replaceFiles = steps[typeof(IngestSteps.ReplaceInLoadout)]
-                .OfType<IngestSteps.ReplaceInLoadout>()
-                .ToLookup(r => r.ModId,
-                    r => new FromArchive
-                    {
-                        To = plan.Loadout.Installation.ToGamePath(r.Source),
-                        Hash = r.Hash,
-                        Size = r.Size,
-                        Id = r.ModFileId
-                    });
-
-            _createFiles = steps[typeof(IngestSteps.CreateInLoadout)]
-                .OfType<IngestSteps.CreateInLoadout>()
-                .ToLookup(r => r.ModId,
-                    r => new FromArchive
-                    {
-                        To = plan.Loadout.Installation.ToGamePath(r.Source),
-                        Hash = r.Hash,
-                        Size = r.Size,
-                        Id = ModFileId.New()
-                    });
-
+            _toAdd = plan.ToAdd.ToLookup(kv => kv.Value, kv => kv.Key);
+            _toUpdate = plan.ToUpdate.ToLookup(kv => kv.Value.Mod.Id, kv => kv);
         }
 
         public override AModFile? Alter(AModFile file)
         {
             if (file is IToFile to)
             {
-                if (_removeFiles.Contains(to.To)) return null;
+                if (_plan.ToDelete.Contains(to.To)) return null;
             }
             return base.Alter(file);
         }
 
         public override Mod? Alter(Mod mod)
         {
-            var toAdd = _replaceFiles[mod.Id].Concat(_createFiles[mod.Id]);
-            if (toAdd.Any())
+            var files = mod.Files;
+            foreach (var file in _toAdd[mod.Id])
             {
-                mod = mod with
+                var entry = _plan.DiskState[file];
+                files = files.With(new FromArchive
                 {
-                    Files = mod.Files.With(toAdd, f => f.Id)
-                };
+                    Id = ModFileId.New(),
+                    Hash = entry.Hash,
+                    Size = entry.Size,
+                    To = file
+                }, x => x.Id);
             }
-            return base.Alter(mod);
+
+            foreach (var (path, pair) in _toUpdate[mod.Id])
+            {
+                var entry = _plan.DiskState[path];
+                var oldFile = files[pair.File.Id];
+                files = files.With(new FromArchive
+                {
+                    Id = oldFile.Id,
+                    Hash = entry.Hash,
+                    Size = entry.Size,
+                    To = path
+                }, x => x.Id);
+            }
+            return base.Alter(mod with {Files = files});
         }
     }
-    */
 }
 

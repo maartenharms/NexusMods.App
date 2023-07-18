@@ -72,12 +72,10 @@ public class ApplicationTests : ADataModelTest<ApplicationTests>
         var ingestPlan = await IngestSuccess(mainList.Value, _ => firstMod.Id);
 
         ingestPlan.IsForking.Should().BeFalse("there are no file conflicts");
-        ingestPlan.ToUpdate.Should().ContainKey(gameFolder.Combine(fileToModify));
+        ingestPlan.ToUpdate.Should().ContainKey(Install.ToGamePath(gameFolder.Combine(fileToModify)));
         ingestPlan.ToDelete.Should().Contain(Install.ToGamePath(gameFolder.Combine(fileToDelete)));
-
-
-
-        /*
+        
+        
         (await LoadoutSynchronizer.FlattenLoadout(mainList.Value)).Files.Count.Should().Be(7, "because no changes are applied yet");
 
         await LoadoutSynchronizer.Ingest(ingestPlan);
@@ -92,9 +90,6 @@ public class ApplicationTests : ADataModelTest<ApplicationTests>
             .Where(f => f.Hash == modifiedHash)
             .Should()
             .NotBeEmpty("Because we've updated a file");
-            
-            */
-
     }
 
 }

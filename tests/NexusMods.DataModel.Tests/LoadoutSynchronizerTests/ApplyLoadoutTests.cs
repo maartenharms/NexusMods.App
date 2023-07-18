@@ -101,7 +101,6 @@ public class ApplyLoadoutTests : ALoadoutSynrchonizerTest<ApplyLoadoutTests>
     [Fact]
     public async Task ExtractedFilesAreExtracted()
     {
-        throw new NotEmptyException();
         var loadout = await CreateApplyPlanTestLoadout();
 
         var file = GetFirstModFile(loadout);
@@ -124,9 +123,7 @@ public class ApplyLoadoutTests : ALoadoutSynrchonizerTest<ApplyLoadoutTests>
             Mods = Array.Empty<Mod>(),
             Flattened = new Dictionary<GamePath, ModFilePair>()
         });*/
-
-        var fileFactory = new NativeFileStreamFactory(file);
-
+        
         TestArchiveManagerInstance.Extracted.Should().ContainKey(Hash.From(0x424));
     }
 

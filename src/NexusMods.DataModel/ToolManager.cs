@@ -79,6 +79,11 @@ public class ToolManager : IToolManager
         }
 
         var ingestPlan = await _loadoutSynchronizer.MakeIngestPlan(loadout, _ => generatedFilesMod.Value, token);
-        return await _loadoutSynchronizer.Ingest(ingestPlan, $"Updating {tool.Name} Generated Files"); 
+        if (ingestPlan is IFailedValidation failedValidation)
+        {
+            throw new Exception("Failed to create ingest plan: " + failedValidation.Message);
+        }
+
+        return await _loadoutSynchronizer.Ingest((SuccessfulIngest)ingestPlan, $"Updating {tool.Name} Generated Files"); 
     }
 }

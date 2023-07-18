@@ -115,6 +115,16 @@ public abstract class ADataModelTest<T> : IDisposable, IAsyncLifetime
         return (SuccessfulValidationResult)validation;
     }
 
+    protected virtual async ValueTask<SuccessfulIngest> IngestSuccess(Loadout loadout, Func<AbsolutePath, ModId> modSelector)
+    {
+        var validation = await LoadoutSynchronizer.MakeIngestPlan(loadout, modSelector ,token: Token);
+        if (validation is IFailedValidation failedValidation)
+        {
+            throw new Exception("Validation failed with message: " + failedValidation.Message);
+        }
+        return (SuccessfulIngest)validation;
+    }
+
     public Task DisposeAsync()
     {
         return Task.CompletedTask;

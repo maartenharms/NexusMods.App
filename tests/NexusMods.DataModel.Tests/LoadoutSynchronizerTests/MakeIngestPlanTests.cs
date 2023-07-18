@@ -31,6 +31,8 @@ public class MakeIngestPlanTests : ALoadoutSynrchonizerTest<MakeIngestPlanTests>
 
         TestIndexer.Entries.Add(new HashedEntry(absPath, Hash.From(0x4242), DateTime.Now - TimeSpan.FromMinutes(20), Size.From(10)));
 
+        throw new NotImplementedException();
+        /*
         var plan = await TestSyncronizer.MakeIngestPlan(loadout, _ => firstModId);
 
         plan.Steps.Should().ContainEquivalentOf(new BackupFile
@@ -47,6 +49,7 @@ public class MakeIngestPlanTests : ALoadoutSynrchonizerTest<MakeIngestPlanTests>
             Size = Size.From(10),
             ModId = firstModId
         }, opt => opt.RespectingRuntimeTypes());
+        */
     }
 
     /// <summary>
@@ -63,6 +66,8 @@ public class MakeIngestPlanTests : ALoadoutSynrchonizerTest<MakeIngestPlanTests>
         TestIndexer.Entries.Add(new HashedEntry(absPath, Hash.From(0x4242), DateTime.Now - TimeSpan.FromMinutes(20), Size.From(10)));
         TestArchiveManagerInstance.Archives.Add(Hash.From(0x4242));
 
+        throw new NotImplementedException();
+        /*
         var plan = await TestSyncronizer.MakeIngestPlan(loadout, _ => firstModId);
 
         plan.Steps.Should().NotContainEquivalentOf(new BackupFile
@@ -79,6 +84,7 @@ public class MakeIngestPlanTests : ALoadoutSynrchonizerTest<MakeIngestPlanTests>
             Size = Size.From(10),
             ModId = firstModId
         });
+        */
     }
 
 
@@ -96,6 +102,8 @@ public class MakeIngestPlanTests : ALoadoutSynrchonizerTest<MakeIngestPlanTests>
 
         TestIndexer.Entries.Add(new HashedEntry(absPath, Hash.From(0x4242), DateTime.Now - TimeSpan.FromMinutes(20), Size.From(10)));
 
+        throw new NotImplementedException();
+        /*
 
         var plan = await TestSyncronizer.MakeIngestPlan(loadout, _nullFunc);
 
@@ -115,6 +123,7 @@ public class MakeIngestPlanTests : ALoadoutSynrchonizerTest<MakeIngestPlanTests>
             ModId = fileOne.Item1,
             ModFileId = fileOne.Item2,
         });
+        */
 
     }
 
@@ -127,9 +136,12 @@ public class MakeIngestPlanTests : ALoadoutSynrchonizerTest<MakeIngestPlanTests>
 
         var plan = await TestSyncronizer.MakeIngestPlan(loadout, _nullFunc);
 
-        plan.Steps.Should().Contain(new RemoveFromLoadout
-        {
-            Source = absPath
-        });
+        throw new NotImplementedException();
+        /*
+    plan.Steps.Should().Contain(new RemoveFromLoadout
+    {
+        Source = absPath
+    });
+    */
     }
 }

@@ -216,6 +216,7 @@ public class LoadoutManager
                 Files = m.Files.With(gameFiles, f => f.Id)
             });
         
+        // We set the last applied loadout to the one we just created.
         Registry.SetLastApplied(finalLoadout);
 
     }

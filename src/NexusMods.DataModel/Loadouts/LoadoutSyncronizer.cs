@@ -185,13 +185,8 @@ public class LoadoutSynchronizer
         var existingFiles = _directoryIndexer.IndexFolders(plannedState.Installation.Locations.Values, token);
         
         var conflicts = new List<HashedEntry>();
-
         var diskState = new Dictionary<GamePath, HashedEntry>();
-        
-        
-        
         var appliedMetas = new Dictionary<GamePath, FileMetaData>();
-
         var appliedFingerprintingState = new FingerprintingValidationState
         {
             Loadout = appliedState,
@@ -355,55 +350,143 @@ public class LoadoutSynchronizer
     /// <param name="modSelector"></param>
     /// <param name="token"></param>
     /// <returns></returns>
-    public async ValueTask<IngestPlan> MakeIngestPlan(Loadout loadout, Func<AbsolutePath, ModId> modSelector, CancellationToken token = default)
+    public async ValueTask<AValidationResult> MakeIngestPlan(Loadout plannedState, Func<AbsolutePath, ModId> modSelector, CancellationToken token = default)
     {
-        throw new NotImplementedException();
-        /*
-        var install = loadout.Installation;
-
+        ModFilePair? appliedFile ;
+        
+        var install = plannedState.Installation;
+        var appliedState = _loadoutRegistry.GetLastApplied(plannedState);
+        if (appliedState == null)
+        {
+            return new NoPreviouslyAppliedState
+            {
+                PlannedState = plannedState,
+            };
+        }
+        
+        var flattenedPlannedState = await FlattenLoadout(plannedState);
+        var flattenedAppliedState = await FlattenLoadout(appliedState!);
+        var diskState = new Dictionary<GamePath, HashedEntry>();
         var existingFiles = _directoryIndexer.IndexFolders(install.Locations.Values, token);
 
-        var (flattenedLoadout, sortedMods) = await FlattenLoadout(loadout);
-
         var seen = new ConcurrentBag<GamePath>();
-        var plan = new List<IIngestStep>();
+        
+        var appliedFingerprintingState = new FingerprintingValidationState
+        {
+            Loadout = appliedState,
+            FlattenedLoadout = flattenedAppliedState
+        };
+        
+        var plannedFingerprintingState = new FingerprintingValidationState
+        {
+            Loadout = plannedState,
+            FlattenedLoadout = flattenedPlannedState
+        };
 
+        // Files that don't require a fork
+        var toAdd = new Dictionary<AbsolutePath, ModId>();
+        var toUpdate = new Dictionary<AbsolutePath, ModFilePair>();
+        var toParse = new Dictionary<AbsolutePath, ModFilePair>();
+        var toDelete = new HashSet<GamePath>();
+        var isForked = false;
+
+        
         await foreach (var existing in existingFiles.WithCancellation(token))
         {
             var gamePath = install.ToGamePath(existing.Path);
             seen.Add(gamePath);
+            diskState.Add(gamePath, existing);
 
-            if (flattenedLoadout.TryGetValue(gamePath, out var planFile))
+            // Is the file in the planned state?
+            if (flattenedPlannedState.Files.TryGetValue(gamePath, out var plannedFile))
             {
-                var planMetadata = await GetMetaData(planFile.File, existing.Path);
-                if (planMetadata == null || planMetadata.Hash != existing.Hash || planMetadata.Size != existing.Size)
+                // It is, so see if there is a conflict
+                
+                // If the file is IFromArchive
+                if (plannedFile.File is IFromArchive fromArchive)
                 {
-                    await EmitIngestReplacePlan(plan, planFile, existing);
+                    if (fromArchive.Hash == existing.Hash && fromArchive.Size == existing.Size)
+                        // They're the same, so we can ignore it
+                        continue;
+                    
+                    toUpdate.Add(existing.Path, plannedFile);
+                    continue;
                 }
+
+                // Is the planned file a IGeneratedFile?
+                if (plannedFile.File is IGeneratedFile generatedFile)
+                {
+                    // See if we have cached metadata for some reason
+                    var fingerprint = generatedFile.TriggerFilter.GetFingerprint(plannedFile, plannedFingerprintingState);
+                    if (_generatedFileFingerprintCache.TryGet(fingerprint, out var cached))
+                    {
+                        if (cached.Hash == existing.Hash && cached.Size == existing.Size)
+                            // They're the same, so we can ignore it
+                            continue;
+                    }
+                    if (flattenedAppliedState.Files.TryGetValue(gamePath, out var appliedFile3))
+                    {
+                        if (appliedFile3.File is IGeneratedFile appliedGeneratedFile)
+                        {
+                            var appliedFingerprint = appliedGeneratedFile.TriggerFilter.GetFingerprint(appliedFile3, appliedFingerprintingState);
+                            if (appliedFingerprint == fingerprint && _generatedFileFingerprintCache.TryGet(appliedFingerprint, out var appledCached))
+                            {
+                                if (appledCached.Hash == existing.Hash && appledCached.Size == existing.Size)
+                                    // The file is the same as the applied state, and the planned fingerprint matches
+                                    // the applied fingerprint so we're all good and can skip this file.
+                                    continue;
+                            }
+                        }
+                    }
+                    // We need to parse the file and fork the modlist
+                    toParse.Add(existing.Path, plannedFile);
+                    continue;
+                }
+
+                throw new NotImplementedException("Unknown file type, this should never happen: + " + plannedFile.File.GetType().FullName);
+            }
+            
+            
+
+            // File isn't in the planned state, so we need to get rid of it, is it in the applied state?
+            if (flattenedAppliedState.Files.TryGetValue(gamePath, out appliedFile))
+            {
+                // It is, so see if it's changed
+                var appliedMetaData = GetMetaData(appliedFile, existing.Path, appliedFingerprintingState);
+                if (appliedMetaData.Hash == existing.Hash && appliedMetaData.Size == existing.Size)
+                    // They're the same, and the file doesn't exist in the planned state, so we can ignore it
+                    continue;
+                
+                // The file has changed, so we need to back it up and fork the loadout
+                var mod = modSelector(existing.Path);
+                toAdd.Add(existing.Path, mod);
+                isForked = true;
                 continue;
             }
-
-            await EmitIngestCreatePlan(plan, existing, modSelector);
         }
 
-        foreach (var (gamePath, pair) in flattenedLoadout)
+        foreach (var (gamePath, pair) in flattenedPlannedState.Files)
         {
             if (seen.Contains(gamePath))
                 continue;
-
-            var absPath = gamePath.CombineChecked(install);
-
-            await EmitRemoveFromLoadout(plan, absPath);
+            // This file wasn't on the disk, so we need to delete it from the planned state
+            toDelete.Add(gamePath);
         }
+            
 
-        return new IngestPlan
+        return new SuccessfulIngest
         {
-            Steps = plan,
-            Mods = sortedMods,
-            Flattened = flattenedLoadout,
-            Loadout = loadout
+            PlannedState = plannedState,
+            AppliedState = appliedState,
+            FlattenedAppliedState = flattenedAppliedState,
+            FlattenedPlannedState = flattenedPlannedState,
+            DiskState = new ReadOnlyDictionary<GamePath, HashedEntry>(diskState),
+            ToAdd = toAdd,
+            ToDelete = toDelete,
+            ToUpdate = toUpdate,
+            ToParse = toParse,
+            IsForking = isForked,
         };
-        */
     }
 
     private ValueTask EmitRemoveFromLoadout(List<IIngestStep> plan, AbsolutePath absPath)
@@ -507,14 +590,16 @@ public class LoadoutSynchronizer
     /// </summary>
     /// <param name="plan"></param>
     /// <param name="commitMessage"></param>
-    public async ValueTask<Loadout> Ingest(IngestPlan plan, string commitMessage = "Ingested Changes")
+    public async ValueTask<Loadout> Ingest(SuccessfulIngest plan, string commitMessage = "Ingested Changes")
     {
         throw new NotImplementedException();
+        /*
         var byType = plan.Steps.ToLookup(t => t.GetType());
         var backupFiles = byType[typeof(IngestSteps.BackupFile)]
             .OfType<IngestSteps.BackupFile>()
             .Select(f => ((IStreamFactory)new NativeFileStreamFactory(f.Source), f.Hash, f.Size));
         await _archiveManager.BackupFiles(backupFiles);
+        */
 
         //return _loadoutRegistry.Alter(plan.Loadout.LoadoutId, commitMessage, new IngestVisitor(byType, plan));
     }

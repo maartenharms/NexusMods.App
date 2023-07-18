@@ -78,8 +78,9 @@ public class SkyrimSpecialEditionTests : AGameTest<SkyrimSpecialEdition>
 
         var plan = await LoadoutSynchronizer.Validate(loadout.Value);
 
+        throw new NotImplementedException();
         using var ms = new MemoryStream();
-        await pluginOrderFile.GenerateAsync(ms, plan);
+        //await pluginOrderFile.GenerateAsync(ms, plan);
 
         ms.Position = 0;
 

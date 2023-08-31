@@ -13,7 +13,7 @@ engine (such as ENBs).
 | Deployment Method      | Hard/Sym Links                      | Hard/Sym Links                  | UVFS                                           | File Copy / Hashing                                        | 
 | File Deleted / Created | Changes are left in Game Folder     | Changes are left in Game Folder | File exists after create, original is replaced | Detected, new modlist with changes is created              |
 | File Modified          | Changes Staged File                 | Changes staged file             | Changes staged file                            | Detected, new modlist with changes is created              |
-| Conflict Resolution    | Last Activated Wins                 | Rule-based                      | Order based (individual files can be hidden)   | Flexible, delegated to a replacable component              |
+| Conflict Resolution    | Last Activated Wins                 | Rule-based                      | Order based (individual files can be hidden)   | Flexible, delegated to a replaceable component              |
 | Changing Conflicts     | Requires re-activating mods         | Requires re-deployment          | Requires re-launching the game                 | Requires copying in the changed files                      |
 | Generated Files        | Left in the game folder             | Left in the game folder         | Added to an `Overrides` mod                    | Added to a overrides mod, existing mods, or pre-tagged mod |
 | Extracted Mod Files    | Stored in Staging Folder            | Stored in staging folder        | Stored in staging folder                       | Left in original downloads until required                  |
